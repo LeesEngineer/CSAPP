@@ -82,7 +82,7 @@ frac  -  63 or 64-bits
 
 <p>We have exponents that are negative and positive. So why not just use a two's complement in the exp field to represent those positive and negative exponents. If we encode the exponent E using this bias representation. The smallest negative exponent is representated by all zeros, And the largest exponent is representated by 01...111</p>
 
-<p></p>
+<p>By using this biased representation, we can just compare two floating-point numbers just as unsigned. We can treat the whole floating-point number as an unsigned integer and compare two number. And get a true comparison</p>
 
 
 
