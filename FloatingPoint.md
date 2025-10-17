@@ -49,7 +49,7 @@ Value      Representation
 
 - exp field encodes E (but is not equal to E)
 
-- frac field encodes M (but is not equal to E)
+- frac field encodes M
 
 ![14ad95ea3ef21c47c6f6b8849fa91a66](https://github.com/user-attachments/assets/d2584ae2-986b-41ad-a89b-c6d2df706dd0)
 
