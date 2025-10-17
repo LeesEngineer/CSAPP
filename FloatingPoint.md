@@ -182,17 +182,48 @@ s exp      frac
   2. Represents case when no numeric value can be determined
  
   3. sqrt(-1), infinity - infinity, infinity * 0
+
+<p>Dynamic Range (Positive Only)</p>
+
+<img width="1548" height="1294" alt="QQ_1760699194561" src="https://github.com/user-attachments/assets/d41b9bae-c17a-47b8-85a2-10badfa8a703" />
+
+<p>You get this nice smooth transition from denorm to normalize. You can see that our exponent E is -6 still</p>
+
+<img width="1966" height="296" alt="QQ_1760701149577" src="https://github.com/user-attachments/assets/e19851a2-2c21-48c3-a169-08adca7d09b6" />
+
+<p>The values are very dense around zero. And then every time you increase the exponent by one. The numbers are spaced twice as far apart as the previous. So these four values are equally spaced.</p>
+
+<p>Zoom in</p>
+
+<img width="1958" height="310" alt="QQ_1760701474305" src="https://github.com/user-attachments/assets/0cfdb8d0-eeaa-4cff-a580-f7eb81cda120" />
+
+</br>
+
+# Floating Point Operation
+
+</br>
+
+<p>If we take two numbers encoded as floating point, And we add them together. There is no guarantee that we'll be able to fit all those bits in the bits we have available to us.</p>
+
+<p>Basic Idea:</p>
+
+- First compute exact result (You just assume that you have an infinite amount of number of bits)
+
+- Make it fit into desired precision
+
+  1. Possibly overflow if exponent  too large
  
-<p></p>
+  2. Possibly <b>round</b> to fit into frac
 
+</br>
 
+## Rounding
 
+</br>
 
+<p>In IEEE there's four different kinds of rounding. There's round towards zero, round down or round to minus infinity, round up which is rounding it to positive infinity, and then the default case, which is round to the nearest even.</p>
 
-
-
-
-
+<p>If you go into assembly language you can change the rounding.</p>
 
 
 
