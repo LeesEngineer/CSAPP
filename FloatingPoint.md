@@ -59,7 +59,7 @@ Value      Representation
 Single precision: 32 bits
 s     -  1-bits
 exp   -  8-bits
-frac  -  32-bits
+frac  -  23-bits
 Single precision: 64 bits
 s     -  1-bits
 exp   -  11-bits
@@ -88,9 +88,9 @@ frac  -  63 or 64-bits
 
 <p>We've already learned about two's complement. That's a perfectly fine way to represent positive and negative numbers. We have exponents that are negative and positive. So why not just use a two's complement in the exp field to represent those positive and negative exponents.</p>
 
-<p>Think about this and we'll come back to it. If we encode the exponent E using this bias representation. The smallest negative exponent is representated by all zeros, And the largest exponent is representated by 01...111</p>
+<p>Think about this and we'll come back to it. If we encode the exponent E using this bias representation. The smallest negative exponent is representated by all zeros, And the largest exponent is representated by 1...110, in which case E equals 01...111</p>
 
-<p>By using this biased representation, we can just compare two floating-point numbers just as unsigned. We can treat the whole floating-point number as an unsigned integer and compare two number. And get a true comparison</p> 
+<p>By using this biased representation, we can just compare two floating-point numbers just as unsigned. We can treat the whole floating-point number as an unsigned integer and compare two numbers. And get a true comparison</p> 
 
 - Significand coded with implied leading 1: M = 1.xxx...x_2
 
@@ -100,7 +100,7 @@ frac  -  63 or 64-bits
  
   3. Maximum when frac = 111...1 (M = 2.0 - epsilon)
  
-  4. Get extra leading bit '1' for free
+  4. Get extra leading bit for free
 
 <p>We are always going to normalize M as 1.xxx...x</p>
 
@@ -127,7 +127,7 @@ s exp      frac
 
 </br>
 
-## Normalized Values
+## DeNormalized Values
 
 </br>
 
