@@ -149,15 +149,41 @@ s exp      frac
 
 - Cases
 
-  1. exp = 000...0, frac = 000...0 : Represents zero value. Note distinct values: +0 and -0
+  1. exp = 000...0, frac = 000...0 : Represents zero value. Note distinct values: +0 and -0 (sign bit)
  
   2. exp = 000...0 ,frac != 000...0 : Numbers closest to 0.0. Equispaced
 
 <p>This design ensures that floating-point numbers maintain a smooth distribution around 0, rather than abruptly jumping from the minimum normalized value to 0.</p>
 
+</br>
 
+## Special Values
 
+</br>
 
+- Condition: exp = 111...1
+
+- Case: exp = 111...1, frac = 000...0
+
+  1. represents value infinity
+ 
+  2. Operation that overflows
+ 
+  3. Both positive and negative
+ 
+  4. 1.0 / 0.0 = -1.0 / -0.0 = positive infinity; 1.0 / -0.0 = negative infinity
+ 
+<p>In floating-point we just overflow to the sticky value called infinity, and then everything we do on that remains infinity.</p>
+ 
+- Case: exp = 111...1, frac != 000...0
+
+  1. Not a number (NaN)
+ 
+  2. Represents case when no numeric value can be determined
+ 
+  3. sqrt(-1), infinity - infinity, infinity * 0
+ 
+<p></p>
 
 
 
