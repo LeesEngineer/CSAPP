@@ -4,6 +4,8 @@
 
 </br>
 
+<p><b>Floating point numbers are represented based on the IEEE 754 standard and do not wrap around.</b></p>
+
 <p>There are two limitations to using binary to reprensent floating point numbers:</p>
 
 <p><b>Limitation #1</b> : Can only exactly represent numbers of the form x / 2^k，<b>Other rational numbers have repeating bit representations</b>.For example:</p>
@@ -217,7 +219,7 @@ s exp      frac
 
 </br>
 
-## Rounding
+# Rounding
 
 </br>
 
@@ -225,17 +227,121 @@ s exp      frac
 
 <p>If you go into assembly language you can change the rounding.</p>
 
+<p>Closer look at Round-To-Even.</p>
 
+- Default rounding mode
 
+  1. Hard to get any oyher kind without droping into assembly
+ 
+  2. All others are statistically biased
+ 
+- Applying to Other Decimal Places / Bit Positions
 
+  1. When exactly halfway between two possible values, round so that least significant digit is even. Halfway would be any number that had a five followed by all zeros
+ 
+  2. E.g., round to nearest hundredth
+ 
+<p>The only time we're going to apply round to even is when we're exactly halfway.</p>
+ 
+```
+7.8949999  7.89  (Less than half way)
+7.8950001  7.90  (Greater than half way)
+7.8950000  7.90  (Half way - round up)
+7.8850000  7.88  (Half way - round down)
+```
 
+</br>
 
+## Rounding binary numbers
 
+</br>
 
+-  Binary fractional numbers
 
+   1. "Even" when least significant bit is 0
+ 
+   2. "Halfway" when bits to right of rounding position = 100..._2
+ 
+-  Examples : round to nearest 1/4 (2 bits right of binary point)
 
+```
+10.00011  10.00  (< 1/2 down)
+10.00110  10.01  (> 1/2 up)
+10.11100  11.00  (  1/2 up)
+10.10100  10.10  (  1/2 down)
+```
 
+</br>
 
+# Multiplication
+
+</br>
+
+- (-1)^s1 * M1 * 2^E1  *  (-1)^s2 * M2 * 2^E2
+
+- Exact Result : (-1)^s * M * 2^E
+
+ 1. Sign s : s1 ^ s2
+
+ 2. Significand M : M1 * M2
+
+ 3. Exponent E : E1 + E2
+
+- Fixing
+
+  1. If m >= 2, shift M right, increment E.
+ 
+  2. If E out of range, overflow.
+ 
+  3. Round M to fit frac precision
+
+</br>
+
+# Addition
+
+</br>
+
+- (-1)^s1 * M1 * 2^E1  +  (-1)^s2 * M2 * 2^E2 (Assume E1 > E2)
+
+- Exact result
+
+  1. Sign s, Significand M : Result of signed align & add
+ 
+  2. Exponent E : E1
+
+- Fixing
+
+  1. If M >= 2, shift M right, increment E
+ 
+  2. if M < 1, shift M left k positions, decrement E by k
+ 
+  3. Overflow if E out of range
+ 
+  4. Round M to fit frac precision
+
+<img width="1076" height="696" alt="QQ_1760778066426" src="https://github.com/user-attachments/assets/27ce6fa7-3456-48fd-a4c0-e13d7b797e00" />
+
+<p>If you're trying to add and subtract really big numbers with really little numbers, you run into this problem of non associativity</p>
+
+</br>
+
+# Floating Point in C
+
+</br>
+
+- Casting between int, float, and double changes bit representation. You remember when we did casting between ints and unsigned values back and forth, trhe cast never changed the bit representation. It just changes the way that some bits are interpreted
+
+- double / float -> int
+
+  1. Truncates fractional part
+ 
+  2. Like rounding towards zero
+ 
+  3. Not defined when out of range or NaN. Generally sets to TMin
+ 
+- int -> double : Exact conversion, as long as int has <= 53 bit word size
+
+- int -> float : Will round according to rounding mode
 
 
 
