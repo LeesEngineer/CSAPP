@@ -88,6 +88,8 @@ sumstore:
 
 <p>Obtain with command (On shark machine) : `gcc -Og -S sum.c`</p>
 
+<p>ret gets you return from wherever the calling position was. </p>
+
 <p>This is actuallt a slightly cleaed up version of what really happens.</p>
 
 ```
@@ -192,7 +194,29 @@ temporarily save dest -> %rbx
 
 <p>Just for the sake of convenience for the hardware designers, it doesn't let you directly copy from one memory location to another.</p>
 
+</br>
 
+## Memory Addressing Modes
+
+</br>
+
+- Normal : (R)  Mem[Reg[R]]
+
+  1. Register R specifies memory address
+ 
+  2. Pointer dereferencing in C
+ 
+  3. movq (%rcx), %rax
+
+- Displacement D(R)  Mem[Reg[R] + D]
+
+  1. Register R specifies start of memory region
+ 
+  2. Constant displacement D specifies offsets
+ 
+  3. movq 8(%rbq), %rdx
+
+<p>In front of this parenthesis it means to offset not to use the address that's in the register. But add or subtract some number from it. To get an address that's just slightly off it.</p>
 
 
 
