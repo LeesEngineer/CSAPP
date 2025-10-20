@@ -287,7 +287,7 @@ salq $2, %rax
 
 </br>
 
-<p></p>
+<p>The x84 and several machine of its generation have these curious little of one bit flags that are called condition codes. They are the basis of how conditional operations works</p>
 
 
 
