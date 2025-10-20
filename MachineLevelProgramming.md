@@ -1,6 +1,8 @@
+# Chapter One Basics
+
 </br>
 
-# MachineLevelProgramming
+## MachineLevelProgramming
 
 </br>
 
@@ -8,7 +10,7 @@
 
 </br>
 
-# Assembly code view
+## Assembly code view
 
 </br>
 
@@ -50,7 +52,7 @@
 
 </br>
 
-# Turning C to into object code
+## Turning C to into object code
 
 </br>
 
@@ -102,13 +104,13 @@ temporarily save dest -> %rbx
 
 </br>
 
-# Assembly Characteristics
+## Assembly Characteristics
 
 </br>
 
 </br>
 
-## Data Types
+### Data Types
 
 </br>
 
@@ -128,7 +130,7 @@ temporarily save dest -> %rbx
 
 </br>
 
-## Operations
+### Operations
 
 </br>
 
@@ -150,7 +152,7 @@ temporarily save dest -> %rbx
  
 </br>
 
-# Disassembly
+### Disassembly
 
 </br>
 
@@ -164,13 +166,13 @@ temporarily save dest -> %rbx
 
 </br>
 
-## Assembly Basics
+### Assembly Basics
 
 </br>
 
 </br>
 
-## x86-64 Integer Registers
+### x86-64 Integer Registers
 
 </br>
 
@@ -184,7 +186,7 @@ temporarily save dest -> %rbx
 
 </br>
 
-## Moving Data
+### Moving Data
 
 </br>
 
@@ -196,7 +198,7 @@ temporarily save dest -> %rbx
 
 </br>
 
-## Memory Addressing Modes
+### Memory Addressing Modes
 
 </br>
 
@@ -218,16 +220,74 @@ temporarily save dest -> %rbx
 
 <p>In front of this parenthesis it means to offset not to use the address that's in the register. But add or subtract some number from it. To get an address that's just slightly off it.</p>
 
+- Most General Form : D(Rb, Ri, s)  Mem[Reg[Rb] + S * Reg[Ri] + D]
 
+  1. D : Constant displacement 1, 2, or 4 bytes
+ 
+  2. Rb : Base register : Any of 16 integer registers.
+ 
+  3. Ri : Index Register : Any, except for %rsp.
+ 
+  4. S : Scale factor : 1, 2, 4, or 8
+ 
+<p>It turns out this will be the sort of natural way to implement array referencing. Basically you can think of is if this is an array index, I have to typically scale it by however many bytes my data type is. If it's an int I have to scale it by four. If it's a long I have to scale it by eight. </p> 
 
+<img width="1678" height="618" alt="QQ_1760940915146" src="https://github.com/user-attachments/assets/6f9fa54b-e3fa-47ea-91b2-7ce39cff84db" />
 
+</br>
 
+### Address Computation Instruction
 
+</br>
 
+- leaq Src, Dst (Load Effective Address (Qword))
 
+  1. Src is address mode expresion.
+ 
+  2. Set Dst to address denoted by expression.
+ 
+- Uses
 
+  1. Computing address without a memory reference. E.g., translation of p = &x[i];
+ 
+  2. computing arithmetic expressions of the form x + k * y. k = 1, 2, 4, or 8.
+ 
+<p>Example:</p>
 
+```
+long m12(long x)
+{
+    return x * 12;
+}
 
+//Converted to ASM by compiler
+leaq (%rdi, %rdi, 2), %rax
+salq $2, %rax
+```
+ 
+<p>leaq basically use the ampersand operation of C to compute an address. It also turns out to be a pretty handy way to do arithmetic and the C compiler likes to use it.</p>
+
+</br>
+
+### Some Arithmetic Operations
+
+</br>
+
+<img width="1122" height="782" alt="QQ_1760942613666" src="https://github.com/user-attachments/assets/4763bb90-6a41-4a48-90f7-7d749ff0fe38" />
+
+<p>shrq is logical shift right. sarq is arithmetic shift right.</p>
+
+<p>No distinction between signed and unsigned int.</p>
+
+<img width="1012" height="354" alt="QQ_1760943975551" src="https://github.com/user-attachments/assets/55f8e610-9e1c-47ca-946b-50ef9965ab11" />
+
+</br>
+
+# Chapter Two Control
+
+</br>
+
+<p></p>
 
 
 
