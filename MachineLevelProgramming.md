@@ -1,4 +1,4 @@
-# Chapter One Basics
+ # Chapter One Basics
 
 </br>
 
@@ -287,16 +287,65 @@ salq $2, %rax
 
 </br>
 
+<p>Information about currently executing program.</p>
+
+- Temporery data (%rax, ...)
+
+- Location of runtime stack (%rsp)
+
+- Location of current code control point (%rip, ...)
+
+- Status of recent tests (CF, ZF, SF, OF)
+
+<p>There's another register that they call the %rip. It means instruction pointer. All it contains is the address of currently executing instruction. It's not a register that you can access in a normal way. It just tells you where in the program. </p>
+
+</br>
+
+## Condition Codes
+
+</br>
+
 <p>The x84 and several machine of its generation have these curious little of one bit flags that are called condition codes. They are the basis of how conditional operations works</p>
 
+<p>CF means the carry flag (For unsigned). The ZF (zero flag) is what it sounds like it's set if the value you just computed is zero. The SF (sign flag for signed) is said if the value just computed as a one in the most significant bit meaning it's a negative value. And the OF (over flag) is a two's complement version of overflow . These are set typically by arithmetic instructions.</p>
 
+<p>These four flags get set as a sort of normal activity by many of the instructions, not by our friend the lea instruction, which I mentioned is kind of a quirky instruction that GCC really likes a lot.</p>
 
+<p>There is some special instructions whose only effect is to set condition codes : </p>
 
+<p><b>Explicit Setting by Compare Instruction.</b></p>
 
+- cmpq Src2, Src1
 
+- cmpq b, a like computing a - b without setting destination
 
+- CF set if carry out from most significant bit (used for unsigned comparisons)
 
+- ZF set if a == b
 
+- SF set if (a - b) < 0 (as signed)
+
+- OF set if two's complement (signed) overflow
+
+<p><b>Explicit Setting by Test Instruction.</b></p>
+
+<p>The only purpose of test is to set condition flags.</p>
+
+<p>When you have two values and you want to compare them with each other, you'd like use cmpq. And the test is if you just have one value and you want to see what it's like is (zero? negative? ...).</p>
+
+- test Src2, Src1
+
+- test b, a like computing a & b without setting destination
+
+- Sets condition codes based on value of Src1 & Src2
+
+- Useful to have one of the operands be a mask
+
+- ZF set when a & b == 0
+
+- SF set when the most significant bit is one ((a & b) < 0)
+
+<p>What you'll typically see is a test where both arguments are the same so testq %rax, %rax</p>
 
 
 
