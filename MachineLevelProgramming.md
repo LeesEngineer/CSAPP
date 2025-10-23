@@ -347,13 +347,82 @@ salq $2, %rax
 
 <p>What you'll typically see is a test where both arguments are the same so testq %rax, %rax</p>
 
+</br>
 
+### Reading Condition Codes
 
+</br>
 
+<p>Setx instructions : Set low-order byte of destination to 0 or 1 based on combinations of condition codes. Does not alter remaining 7 bytes</p>
 
+<img width="1472" height="866" alt="QQ_1761199098281" src="https://github.com/user-attachments/assets/eaff1450-a878-4ce6-81b6-f493a2b2b4bc" />
 
+<p>Can referance low-order byte.</p>
 
+<img width="1826" height="1168" alt="QQ_1761200922242" src="https://github.com/user-attachments/assets/46182c4b-c6d3-4940-a442-5ea8939ec67f" />
 
+<b>one of addressable byte registers : </b>
+
+- Does not alter remaining bytes
+
+- Typically use movzbl to finish job <b>(32-bit instructions also set upper 32 bits to 0)</b>
+
+```
+int gt(int x, int y)
+{
+    return x > y;
+}
+```
+
+```
+cmpq %rsi, %rdi
+     setg %al
+     movzbl %al, %eax  # Set when >
+     ret               # Zero rest of %rax
+```
+
+<p>%rdi is used as the first parameter, and %rsi is the second. %rax is used as the return value.</p>
+
+</br>
+
+## Branches
+
+</br>
+
+<b>Jumping</b>
+
+<p>jx instructions : Jump to different part of code depending on condition codes.</p>
+
+<img width="1472" height="944" alt="QQ_1761203848619" src="https://github.com/user-attachments/assets/d00afe1b-6f51-4ae6-ad34-c509e3ed63bc" />
+
+<p>Example : </p>
+
+```
+long absdiff(long x, long y)
+{
+    long result;
+    if(x > y)
+        result = x - y;
+    else
+        result = y - x;
+    return result;
+}
+```
+
+```
+absdiff:
+    cmpq    %rsi, %rdi
+    jle     .L4
+    movq    %rdi, %rax
+    subq    %rsi, %rax
+    ret
+.L4:
+    movq    %rsi, %rax
+    subq    %rdi, %rax
+    ret
+```
+
+<p>In general in assembly code if you give a name and then a colon, what's to the left of that is called a label</p>
 
                                                       
                            
