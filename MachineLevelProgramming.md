@@ -424,13 +424,43 @@ absdiff:
 
 <p>In general in assembly code if you give a name and then a colon, what's to the left of that is called a label</p>
 
-                                                      
-                           
-                           
-                           
-                           
-                           
-                           
+<b>Conditional Move Example : </b>
+
+```
+absdiff:
+movq    %rdi, %rax
+subq    %rsi, %rax
+movq    %rsi, %rdx
+subq    %rdi, %rdx
+cmpq    %rsi, %rdi
+cmovle  %rdx, %rax
+ret
+```
+
+<p>Bad Cases for Conditional move</p>
+
+- Expensive Computions : `val = Test(x) ? Hard1(x) : Hard2(x);`
+
+  1. Both values get computed.
+ 
+  2. Only makes sense when computations are very simple
+
+- Risky Computation `val = p ? *p : 0;`
+
+  1. Both values get computed
+ 
+  2. Many have undesirable effects
+ 
+- Computations with side effects `val = x > 0 ? x *= 7 : x += 3;`
+
+  1. Both values get computed
+ 
+  2. Must be side-effect free
+ 
+<p> </p>
+
+
+
 
 
 
