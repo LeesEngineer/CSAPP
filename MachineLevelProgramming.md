@@ -52,7 +52,7 @@
 
 </br>
 
-## Turning C to into object code
+## Turning C into object code
 
 </br>
 
