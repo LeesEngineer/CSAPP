@@ -1,4 +1,4 @@
- # Chapter One Basics
+  # Chapter One Basics
 
 </br>
 
@@ -437,6 +437,8 @@ cmovle  %rdx, %rax
 ret
 ```
 
+<p>It's like this idea of just go ahead and do everything and then pick at the last end.</p>
+
 <p>Bad Cases for Conditional move</p>
 
 - Expensive Computions : `val = Test(x) ? Hard1(x) : Hard2(x);`
@@ -457,13 +459,78 @@ ret
  
   2. Must be side-effect free
  
-<p> </p>
+</br>
 
+## Loops
 
+</br>p
 
+<p>C actually has three different kinds of loops, it has a while-loop and a for-loop which you're familiar with, and dowhile-loop. But it turns out it's the simplest one to implement.</p>
 
+</br>
 
+### do-while loop
 
+</br>
+
+<p>If we think in terms of goto, that's a pretty straightforward thing to replace it. </p>
+
+```
+long pcount_do(unsigned long x)
+{
+    long result = 0;
+    do
+    {
+        result += x & 0x1;
+        x >>= 1;
+    } while(x);
+    return result;
+}
+```
+
+```
+long pcount_goto(unsigned long x)
+{
+    long result = 0;
+loop:
+    result += x & 0x1;
+    x >>= 1;
+    if(x) goto loop ;
+    return result;
+}
+```
+
+```
+    movl    $0, %eax
+.L2:
+    movq    %rdi, %rdx
+    andl    $1, %eax
+    addq    %rdx, %rax
+    shrq    %rdi
+    jne     .L2
+    rep; ret
+```
+
+</br>
+
+### while loop
+
+</br>
+
+```
+while (Test)
+    Body
+```
+
+```
+    goto test
+loop;
+    Body
+test:
+    if(Test)
+        goto loop;
+done; 
+```
 
 
 
