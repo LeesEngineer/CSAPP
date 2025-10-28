@@ -532,28 +532,128 @@ test:
 done; 
 ```
 
+- "Jump to middle" translation
 
+- Used with -Og 
 
+<p>There is two ways to generate a code for while-loop. Nut you'll find GCC actually uses two different ways. A One is using -Og. O stands for optimized, g which means debug. As I mentioned last time this turns out to be the perfect level of optimization.</p>
 
+<p>Where you want to be able to look at machine code and understand it and how it relates to the c code. Because it does some sort of simple optimizations. But it doesn't try to rewrite your whole program to make it run better.</p>
 
+<p>Whereas even with -O1, which is the next level in the optimization. You will find sometimes it will do some pretty quirky stuff.</p>
 
+<p>So usually there's higher levels optimization, and we are purposely backing off from that to make this code easier tounderstand.  </p>
 
+</br>
 
+### For Loop
 
+</br>
 
+<p>For loop has four components. It has an initialization, has a test, has a rule for doing an update in case as a way to continue the loop, and then it has a body of the loop.</p>
 
+```
+#define WSIZE 8 * sizeof(int)
+long pcount_for(unsigned long x)
+{
+    size_t i;
+    long result = 0;
+    for(i = 0; i < WSIZE; i ++)
+    {
+        unsigned bit = (x >> 1) & 0x1;
+        result += bit;
+    }
+    return result;
+}
+```
 
+<p>For loop -> while loop</p>
 
+```
+for(Init; Test; Update)
+    Body
 
+Init;
+while(Test)
+{
+    Body
+    Update;
+}
+```
 
+</br>
 
+## Switch statements
 
+</br>
 
+```
+long switch_eg(long x, long y, long z)
+{
+    long w = 1;
+    switch(x)
+    {
+    case 1:
+        w = y * z;
+        break;
+    case 2:
+        w = y / z;
 
+    case 3:
+        w += z;
+        break;
+    case 5:
+    case 6:
+        w -= z;
+        break;
+    default:
+        w = 2;
+    }
+    return w; 
+}
+```
 
+- Multiple case labels : 5 & 6
 
+- Fall through cases : 2
 
+- Missing cases : 4
 
+<p>If you were told not use switch statements anymore, what you'd probably do is write a big long chain of if-else. You'd expect this to be the machine code of switch statement, but it's not. let me show you what the machine code does. </p>
+
+<img width="2126" height="788" alt="QQ_1761640046101" src="https://github.com/user-attachments/assets/c2791a79-1929-4000-9e5a-ad3df304fe9c" />
+
+<p>So think of the general form of it as being some blocks of code. The entry points of which are labeled by these case values. And then the box string together in various different ways and do various things. What I'm going to do is compile a code for all of those blocks, and store them away in some part of memory, load up memory to contain these code blocks.</p>
+
+<p>I build a table, and each entry of this table describes the starting location of one of these code blocks. This table will have many entries of addresses to tell me where these code are located.</p>
+
+<p>There's a cool instruction. It's like a 'ray indexing'. If you think of a ray indexing, it means you can grab a value out of the middle of array or some set of values you know. without having to step through them one by one.</p>
+
+<p>It's the same idea here that I will take my value and use that to figure out directly where I should jump to a block of code without having to step through a branch of other conditions(chain of if-else). You can see the difference in efficiency between sort of in one step knowing exactly where you want to be versus stepping through you know on average n over two conditions to get to where I want to go</p>
+
+<p>Let's look at this at the assembly code level</p>
+
+```
+long switch_eg(long x, long y, long z)
+[
+    long w = 1;
+    switch(x)
+    {
+        ...
+    }
+    return w;
+]
+```
+
+```
+switch_eg:
+    movq    %rdx, %rcx
+    cmpq    $6, %rdi
+    ja      .L8
+    jmp     *.L4(, %rdi, 8)
+```
+
+<p>It's just making a copy of argument z here for some reason. And then it's comparing x to 6(Because 6 was the largest value of any of cases.). And it's using a jump instruction to go to .L8 , what we'll find is that tells you what the default behavior should be</p>
 
 
 
