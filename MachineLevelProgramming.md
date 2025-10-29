@@ -653,17 +653,40 @@ switch_eg:
     jmp     *.L4(, %rdi, 8)
 ```
 
-<p>It's just making a copy of argument z here for some reason. And then it's comparing x to 6(Because 6 was the largest value of any of cases.). And it's using a jump instruction to go to .L8 , what we'll find is that tells you what the default behavior should be</p>
+<p>It's just making a copy of argument z here for some reason. And then it's comparing x to 6(Because 6 was the largest value of any of cases.). And it's using a jump instruction to go to .L8 , what we'll find is that tells you what the default behavior should be. But also it will cause it to jump if x is less than 0.</p>
 
+<p>Then the final part is the real heart of the work. This is a very special goto instruction. That lets me index into a table and extract out of that an address, and then jump to that address. So that's what lets me go directly up to some block of code, based on whether the values will be in the range between 0 and 6.</p>
 
+<p>Each entry is 8 bytes, which is the size of one address. The asterisk(*) here indicates an indirect jump, meaning: Instead of jumping directly to a fixed label, it jumps to an address stored in a register or memory.(.L4 will be interpreted as a value.)</p>
 
+<p><b>Jump table</b></p>
 
+```
+.section    .rodate 
+  .align 8
+.L4:
+    .quad   .L8  # x = 0
+    .quad   .L3  # x = 1
+    .quad   .L5  # x = 2
+    .quad   .L9  # x = 3
+    .quad   .L8  # x = 4
+    .quad   .L7  # x = 5
+    .quad   .L7  # x = 6
+```
 
+<p>It's specified in assembly code. And it's the job of the assembler to actually fill in the contents of the table.</p>
 
+<p>I need a quad is just a declaration to say I need an 8 byte value here, and that value should match whatever address.</p>
 
+- Table Structure
 
+  1. Each target requires 8 bytes
+ 
+  2. Base address at .L4
 
+<img width="1720" height="1126" alt="QQ_1761722227670" src="https://github.com/user-attachments/assets/5a826bf0-1033-4523-a91b-1b294567fbc9" />
 
+<p>We can see some of the logic of this switch statement.</p>
 
 
 
