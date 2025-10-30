@@ -674,7 +674,7 @@ switch_eg:
     .quad   .L7  # x = 6
 ```
 
-<p>It's specified in assembly code. And it's the job of the assembler to actually fill in the contents of the table.</p>
+<p>It's specified in assembly code. And it's the job of the assembler to actually fill in the contents of the table in binary file. Meaning the jump if you look at the .s file the assembly code file, it's all in there and the compiler generated these tables(at least the sort of framework for these tables). But the details of which get filled in by assembler</p>
 
 <p>I need a quad is just a declaration to say I need an 8 byte value here, and that value should match whatever address.</p>
 
@@ -682,32 +682,153 @@ switch_eg:
 
   1. Each target requires 8 bytes
  
-  2. Base address at .L4
+  2. Base address at .L4. It indicates the address of the memory location starting from here.
 
 <img width="1720" height="1126" alt="QQ_1761722227670" src="https://github.com/user-attachments/assets/5a826bf0-1033-4523-a91b-1b294567fbc9" />
 
 <p>We can see some of the logic of this switch statement.</p>
 
+<hr>
 
+<p>Now, the rest od it is to look at the various code box.</p>
 
+</br>
 
+### x == 1
 
+</br>
 
+```
+switch(x)
+{
+case 1 : // .L3
+    w = y * z;
+    break;
+  ...
+}
+```
 
+```
+.L3:
+    movq    %rsi, %rax
+    imulq   %rdx, %rax
+    ret
+```
 
+<p>Break is just going to be turned into ret instruction here. The compiler doesn't actually come to a single point and say okay everyone returned at this point. It just sticks returns directly in wherever these breaks occur. </p>
 
+</br>
 
+### Handling Fall-Through
 
+</br>
 
+<p>Here is actually a curious by the way I'm always somewhat surprised by what the compiler does. </p>
 
+<img width="1930" height="1058" alt="QQ_1761726263765" src="https://github.com/user-attachments/assets/e7601b50-b2b1-488e-a3b8-4a27967a6271" />
 
+<p>In particular, It patched together the pair of fall through case. And it had to do these separately. Because remember w was not set before I entered these code blocks. It deferred setting. And here I hit case three and all of a sudden I actually need whatever w was which was one. so the compiler will set w to 1 here before we continue. So as a result it sort of creates two code blocks. But case two will jump from it. </p>
 
+```
+long w = 1;
+  ...
+switch(x)
+{
+  ...
+case 2:
+    w = y / z;
+case 3:
+    w += z;
+    break;
+  ...
+}
+```
 
+```
+.L5:
+    movq    %rsi, %rax
+    cqto
+    idivq   %rcx
+    jmp     ,L6
+.L9:
+    movl    $1, %eax
+.L6:
+    addq    %rcx, %rax
+    ret
+```
 
+<p>Very quirky</p>
 
+<p>Once again it's making use of this feature that movl will set the upper 32 bits to zero.</p>
 
+</br>
 
+### x == 5, x == 6, default
 
+</br>
+
+```
+switch(x)
+{
+  ...
+case 5:
+case 6:
+    w -= z;
+    break;
+default:
+    w = 2;
+}
+```
+
+```
+.L7:
+    movl    $1, %eax
+    subq    %rdx, %rax
+    ret
+.L8:
+    movl    $2, %eax
+    ret
+```
+
+<p><b>On a 64-bit sysytem, if you just only assign a small constant to %rax, using movl is smaller and faster.</b></p>
+
+<b>Summarizing:</b>
+
+- C control
+
+  1. if-then-else
+ 
+  2. do-while
+ 
+  3. while, for
+ 
+  4. switch
+ 
+- Assembler control
+
+  1. Conditional jump
+ 
+  2. Conditional move
+ 
+  3. Indirect jump (via jump tables)
+ 
+  4. Compiler generates code sequence to implement more complex control
+ 
+- Techniques
+
+  1. Loops converted to do-while or jump-to-middle form
+ 
+  2. Large switch statements use jump tables
+ 
+  3. Sparse switch statements may use decision tree(if-elseif-elseif-else)
+
+</br>
+
+# Chapter Three Procedures
+
+</br>
+
+<p></p>
 
 
 
