@@ -828,15 +828,81 @@ default:
 
 </br>
 
-<p></p>
+<p>At the assembly level, a procedure is a block of code that is called, executing and returning</p>
 
+<p>If you think about what goes on in a procedure. E ven in C which is a relatively unsophisticated language in many ways, ther's a lot going on.</p>
 
+</br>
 
+## Mechanisms in Procedures
 
+</br>
 
+<p>To implement this, the compiler needs the support of several underlying mechanisms.</p>
 
+- Passing control
 
+  1. To beginning of procedure code
+ 
+  2. Back to return point
+ 
+- Passing data
 
+  1. Procedure arguments
+ 
+  2. Return value
+ 
+- Memory management
+
+  1. Allocate during procedure execution
+ 
+  2. Deallocate upon return
+ 
+<p>Mechanisms all implemented with machine instructions. The compiler translates the function you write into a series of assembly instructions.</p>
+
+<p>x86-64 implementation of a procedure uses only those mechanisms required. Because the compiler is smart, it doesn't always build a full stack frame. For example, if a function has no local variables, doesn't call other funcations, and doesn't need to save any registers, the compiler even omit the usual prologue and epilogue instructions such as "push", "mov %rsp, %rbp" and "pop". They do whatever is absolutely needed. </p>
+
+</br>
+
+## Stack Structure
+
+</br>
+
+<p>The first one and sort of the most critical is how do we pass control to a function. Before wo can talk about that we have to talk about the stack.</p>
+
+- Region of memory managed with stack discipline
+
+- Grows toward lower addresses
+
+- Register %rsp (stack pointer) contains lowest stack addess.<b>(Address of "top" element)</b>
+
+<img width="1142" height="1228" alt="QQ_1761900386221" src="https://github.com/user-attachments/assets/e0137ac2-ea87-4d60-bdce-27591bc14e4a" />
+
+<p>Stack is used by the program to manage the state associated with the procedures that it calls and as they return. So it's where program passes all these potential information, the control information, data and allocates local data. It makes use of that sort of last in first out allocation principle, matches very well with this idea of procedure call and return.</p>
+
+<p>In x86 stacks, actually start with a very high numbered address. And when they grow more data are allocated for the stack, It's done by decrementing the stack pointer. It's value is the address of current top of the stack. And every time you allocate more space on the stack it does by decrementing that pointer.</p>
+
+<p>There are explicit instructions push and pop that make use of the stack.</p>
+
+- pushq Src
+
+  1. Fetch operand at Src. Src could be from register, memory or an immediate
+ 
+  2. Decrement %rsp by 8
+ 
+  3. Write operand at address given by %rsp
+ 
+  4. That address of memory is determined by first decrementing the stack pointer and then doing a write
+ 
+- popq Dest
+
+  1. Read value at address given by %rsp
+ 
+  2. Increment %rsp by 8
+ 
+  3. Store value at Dest(must be register)
+ 
+<p>One thing you'll notice here is when I say deallocate, it's not meaning I magically erase this or something all I'm doing is just moving a stack pointer. Whatever it was there at the top of the stack is still in memory.</p>
 
 
 
