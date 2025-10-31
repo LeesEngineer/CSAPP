@@ -904,10 +904,72 @@ default:
  
 <p>One thing you'll notice here is when I say deallocate, it's not meaning I magically erase this or something all I'm doing is just moving a stack pointer. Whatever it was there at the top of the stack is still in memory.</p>
 
+</br>
 
+## Passing Control
 
+</br>
 
+<p>The instructions push and pop are to put data on the stack or take it off. We use the same basic idea for a call and return.</p>
 
+```
+void multstore(long x, long y, long *dest)
+{
+    long t = mult2(x, y);
+    *dest = t;
+}
+```
+
+```
+0000000000400540 <multstore>:
+400540:  push   %rbx            # Save %rbx
+400541:  mov    %rdx,%rbx       # Save dest
+400544:  callq  400550 <mult2>  # mult2(x,y)
+400549:  mov    %rax,(%rbx)     # Save at dest
+40054c:  pop    %rbx            # Restore %rbx
+40054d:  retq                   # Return
+```
+
+```
+long mult2(long x, long y)
+{
+    long s = x * y;
+    return s;
+}
+```
+
+```
+0000000000400550 <mult2>:
+400550:  mov    %rdi,%rax
+400553:  imul   %rsi,%rax
+400557:  retq
+```
+
+<b>Procedure Control Flow : </b>
+
+- Use stack to support procedure call and return
+
+- Procedure call : call label
+
+  1. Push return address on stack
+ 
+  2. Jump to label
+ 
+- Return address
+
+  1. Address of the next instruction right after call
+ 
+  2. Example from disassembly
+ 
+- Procedure return : ret
+
+  1. Pop address from stack
+ 
+  2. Jump to address
+ 
+<p>Keep in mind that call and ret don't do the whole business of the procedure call and return. They just do the control part of it which as we saw is only one of three aspects of a procedure</p>
+
+<p></p>
 
 
 
