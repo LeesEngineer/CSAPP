@@ -969,18 +969,27 @@ long mult2(long x, long y)
  
 <p>Keep in mind that call and ret don't do the whole business of the procedure call and return. They just do the control part of it which as we saw is only one of three aspects of a procedure</p>
 
+<img width="2000" height="1276" alt="QQ_1761993941884" src="https://github.com/user-attachments/assets/15eeef6a-3f50-4538-9334-d220611d8ecc" />
+
+<p>Let's break this down into its simplest part. Let's imagine a scenario. In which the top of stack is at 0x120.</p>
+
+<p>And the program counter which is called %rip which is not anything to do with death(rest in peace). It's indicating that the current instruction is at 0x400544 which is this call instruction.</p>
+
+<p>So what would happen with the call instruction, it would actually do three things. It would decrement the stack pointer and so subtracting 8 from (0x)120 and hex gives you (0x)118, and would write the address of the instruction following the call onto the top of the stack. That's the instruction that I'm going to return and used for my return address.(the instruction after the call instead of the call itself otherwise you'd have an infinite loop.)</p>
+
+<p>The binary encoding of this call instruction also includes the destination address, which corresponds to the entry point of the particuler called function. So the program counter will be set to that value. Now the processor starts executing along these instruction. So it did a combination of a jump and a push. </p>
+
+<p>You never manipulate the %rip register explicitly. It's implicitly part of the call instruction. But embedded in the call instruction you see it's five bytes long.(I don't show you the byte encoding)</p>
+
+<p>When hit ret instruction, its purpose is to sort of reverse the effect of a call. It assume that the top of stack has an address that you want to jump to. It will pop that address off stack,(increment the stack pointer) and then it will set the program counter to what just popped off stack. That will cause the program to resume back to where it comes from. How clever!</p>
+
+</br>
+
+## Passing Data
+
+</br>
+
 <p></p>
-
-
-
-
-
-
-
-
-
-
-
 
 
 
