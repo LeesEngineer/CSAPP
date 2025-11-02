@@ -945,6 +945,30 @@ long mult2(long x, long y)
 400557:  retq
 ```
 
+<p>Parameter passing rules (x86-64 system V ABI): </p>
+
+<p>The first 6 integer (or pointer) parameters get passed within these particular registers (There is no particular logic to it): %rdi, %rsi, %rdx, %rcx, %r8 and %r9.(in order)</p>
+
+<p>Why store %rdx in %rbx : We need to know the value of dest after mult2 return. however, %rdx is likely to be corrupted during mult2's call. Therefore, it must be saved beforehand.</p>
+
+<p>And according to System V x86-64 ABI, registers are divided into two categories :</p>
+
+- Caller-saved
+
+  1. %rax, %rcx, %rdx, %rsi, %rdi, %r8–%r11
+ 
+  2. May be modified
+ 
+- Callee-saved
+
+  1. %rbx, %rbp, %r12–%r15
+ 
+  2. Must be restored to original value
+ 
+<p>So %rbx is used to temporarily store dest.</p>
+
+<hr>
+
 <b>Procedure Control Flow : </b>
 
 - Use stack to support procedure call and return
@@ -981,7 +1005,9 @@ long mult2(long x, long y)
 
 <p>You never manipulate the %rip register explicitly. It's implicitly part of the call instruction. But embedded in the call instruction you see it's five bytes long.(I don't show you the byte encoding)</p>
 
-<p>When hit ret instruction, its purpose is to sort of reverse the effect of a call. It assume that the top of stack has an address that you want to jump to. It will pop that address off stack,(increment the stack pointer) and then it will set the program counter to what just popped off stack. That will cause the program to resume back to where it comes from. How clever!</p>
+<p>When hit ret instruction, its purpose is to sort of reverse the effect of a call. It assume that the top of stack has an address that you want to jump to. It will pop that address off stack,(increment the stack pointer) and then it will set the program counter to what just popped off stack. That will cause the program to resume back to where it comes from. How clever the idea!</p>
+
+<p>We use kind of combinations of instructions to build up all the layers associated with operations like procedure call and return.</p>
 
 </br>
 
@@ -989,15 +1015,45 @@ long mult2(long x, long y)
 
 </br>
 
-<p></p>
+<p>We've seen a couple registers that get used when you're passing arguments to a function and %rax get used to return values from a function. And again this is all built into ABI.</p>
 
+<p>By the way this is all for arguments that are either integers or pointers, I've got a little bit on floating point those are passed in a separate set of registers.</p>
 
+<p>What happens if you have more than 6 arguments to a function, well the rule on that is those get put in memory on stack</p>
 
+<p>As long as everyone sticks to this common interface standard, then you can even use different compilers to compile code, and have them be able to cooperate with each other in terms of passing arguments and returning data.</p>
 
+</br>
 
+## Managing Local Data 
 
+</br>
 
+<p>What if there's some local data that we need to make use of.</p>
 
+- Languages that support recursion
+
+  1. e.g., C, Pascal, Java
+ 
+  2. Code must be "reentrant" : Multiple simultaneous instantiations of single procedure
+ 
+  3. Need some place to store states of each instantiations : Arguments, Local variables, Return pointer.
+ 
+- Stack discipline
+
+  1. State for given procedure needed for limited time. From when called to when return
+ 
+  2. Callee returns before caller does
+ 
+- Stack allocated in Frames
+
+  1. State for single procedure instantiation
+ 
+<p>To get this idea, we introduce another concept whick is called the stack frame. A stack frame is essentially a specific pattern of memory allocation used during program execution. One of the key characteristics of function calls and returns is that, when a program performs a nested series of function calls, each invocation allocates its own distinct region on the stack — its stack frame.</p>
+
+<p>When a particular function is executing, It only needs to reference the data within that function or values that have been passed to it. But the point is the rest of the functions in your code however many there are are sort of frozen at that moment, there's only one function executing at any given time.(Single threaded model here) So we can allocate on this stack whatever space is required for this particular function. And then when we return from that function, there's no need to preserve any of the information associated with the function.</p>
+
+<p>That's why we use it. if you make more calls, you keep allocating more stuff. But as they return you back out of the stack and free things up.</p>
 
 
 
