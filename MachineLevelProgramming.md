@@ -1081,15 +1081,15 @@ long mult2(long x, long y)
     
      - Includes pop by ret instruction
 
+<p>One of the reasons why recursion is a little bit of risky thing : It keeps requiring more space as you go deeper in the recursion. And most systems limit the toatl depth of the stack.</p>
+
 <img width="1054" height="1084" alt="QQ_1762147967397" src="https://github.com/user-attachments/assets/57c77bd4-84bb-4e35-bc09-4dcd6040416c" />
 
 <p>In general stack frame is delimited by two pointers. One is the satck pointer %rsp which we're familiar with. the another calls the base pointer which %rbp indicates. But one feature is that this is an optional pointer. We don't use %rbp except in some very special cases.(It will be used instead just as a regular register)</p>
 
 <p></p>
 
-
-
-
+<p>The question here is if %rbp was optional then how does the program know how to do the deallocation.</p>
 
 
 
