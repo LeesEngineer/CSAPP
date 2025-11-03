@@ -1087,16 +1087,73 @@ long mult2(long x, long y)
 
 <p>In general stack frame is delimited by two pointers. One is the satck pointer %rsp which we're familiar with. the another calls the base pointer which %rbp indicates. But one feature is that this is an optional pointer. We don't use %rbp except in some very special cases.(It will be used instead just as a regular register)</p>
 
-<p></p>
+<p>Traditional(e.g., in earlier compilers or when compiling with -fno-omit-frame-pointer), %rbp acts like a fixed anchor point, telling us : </p>
 
-<p>The question here is if %rbp was optional then how does the program know how to do the deallocation.</p>
+- Where the stack frame begins
 
+- How much local variables are offset
 
+- How mush space is restored upon return
 
+<p>whenever the function is called : </p>
 
+```
+push    %rbp
+mov     %rsp, %rbp
+sub     $N, %rsp
+```
 
+<p>Before the function returns : </p>
 
+```
+mov     %rbp, %rsp
+pop     %rbp
+ret
+```
 
+<p>The question here is if %rbp was optional then how does the program know how to do the deallocation. How can it reset the stack back to the right place: </p>
+
+<p>The compiler knows the size of the stack frame when generating. Because the size of a static stack frame is fully known at compile time . For exampel, when it's going to allocate 16 bytes, and then it knows at the end of that it can deallocate 16 bytes.</p>
+
+<p>There is a few special cases where it can't know in advance how much space will be allocated. When it has to allocate an array or a memory buffer of variable size(dynamic), it will use %rbp in these cases.</p>
+
+<hr>
+
+<p>x86-64/Linux stack frame : </p>
+
+<p>Generally, the stack frame can be divided from top to bottom as follows.</p>
+
+- Current stack frame ("Top to bottom")
+
+  1. "Argument build"
+
+     - Parameters for function about to call
+    
+     - The frirst six parameter may be passed through register, but the rest will be pushed onto the stack
+    
+     - This part is located at the top of the stack frame
+ 
+  2. Local variables
+
+     - The local variables that can't keep in registers such as array, some structure or those that compiler chooses to spill to the stack
+
+  3. Saved register context
+
+     - When another function is called，some registers will be modified
+ 
+  4. Old frame pointer (Optional)
+ 
+- Caller Stack Frame
+
+  1. Return address : Pushed by call instruction
+ 
+  2. Arguments for this call (if more than 6)
+
+<img width="334" height="1296" alt="QQ_1762162641643" src="https://github.com/user-attachments/assets/fc5ff436-3ae8-4765-b1a3-250788a0787d" />
+
+```
+
+```
 
 
 
