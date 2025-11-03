@@ -1,4 +1,4 @@
-  # Chapter One Basics
+# Chapter One Basics
 
 </br>
 
@@ -1035,13 +1035,13 @@ long mult2(long x, long y)
 
   1. e.g., C, Pascal, Java
  
-  2. Code must be "reentrant" : Multiple simultaneous instantiations of single procedure
+  2. Code must be "reentrant" : Multiple simultaneous instantiations of single procedure. And these instantiations don't interfere with each other.
  
   3. Need some place to store states of each instantiations : Arguments, Local variables, Return pointer.
  
 - Stack discipline
 
-  1. State for given procedure needed for limited time. From when called to when return
+  1. State for given procedure needed only in limited time. From when called to when return
  
   2. Callee returns before caller does
  
@@ -1055,10 +1055,37 @@ long mult2(long x, long y)
 
 <p>That's why we use it. if you make more calls, you keep allocating more stuff. But as they return you back out of the stack and free things up.</p>
 
+<p>So each block we use for a particular call is called the stack frame. To be more technical we'll say stack frame is a particular instantiation of a particular procedure.</p>
 
+<b>Stack Frames(This is the same stack in which you pushing and poping addresses to)</b>
 
+- Contents
 
+  1. Return information
+ 
+  2. Local storage(if needed)
+ 
+  3. Temporary space(if needed)
+ 
+- Management
 
+  1. Space allocated when enter procedure
+ 
+     - "Set-up" code
+    
+     - Includes push by call instruction
+    
+  2. Deallocated when return
+ 
+     - "Finish" code
+    
+     - Includes pop by ret instruction
+
+<img width="1054" height="1084" alt="QQ_1762147967397" src="https://github.com/user-attachments/assets/57c77bd4-84bb-4e35-bc09-4dcd6040416c" />
+
+<p>In general stack frame is delimited by two pointers. One is the satck pointer %rsp which we're familiar with. the another calls the base pointer which %rbp indicates. But one feature is that this is an optional pointer. We don't use %rbp except in some very special cases.(It will be used instead just as a regular register)</p>
+
+<p></p>
 
 
 
