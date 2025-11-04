@@ -951,7 +951,7 @@ long mult2(long x, long y)
 
 <p>Why store %rdx in %rbx : We need to know the value of dest after mult2 return. however, %rdx is likely to be corrupted during mult2's call. Therefore, it must be saved beforehand.</p>
 
-<p>And according to System V x86-64 ABI, registers are divided into two categories :</p>
+<p>And according to System V x86-64 ABI , registers are divided into two categories :</p>
 
 - Caller-saved
 
@@ -965,7 +965,9 @@ long mult2(long x, long y)
  
   2. Must be restored to original value
  
-<p>So %rbx is used to temporarily store dest.</p>
+<p>So %rbx is used to temporarily store dest.(register saving conventions)</p>
+
+<p>register saving conventions prevent one function call from corrupting another's data. <b>Unless the C code explicitly does so(e.g., buffer overflow in Lecture 9)</b></p>
 
 <hr>
 
@@ -1151,16 +1153,100 @@ ret
 
 <img width="334" height="1296" alt="QQ_1762162641643" src="https://github.com/user-attachments/assets/fc5ff436-3ae8-4765-b1a3-250788a0787d" />
 
+<p>Example:</p>
+
+```
+long incr(long *p, long val)
+{
+	long x = *p;
+	long y = x + val;
+	*p = y;
+	return x;
+}
 ```
 
 ```
+incr:
+	movq	(%rdi), %rax
+	addq	%rax, %rsi
+	movq	%rsi, (%rdi)
+	ret
+```
 
+```
+long call_incr()
+{
+	long v1 = 15213;
+	long v2 = incr(&v1, 3000);
+	return v1 + v2;
+}
+```
 
+```
+call_incr:
+	subq	$16, %rsp
+	movq	$15213, 8(%rsp)
+	movl	$3000, %esi
+	leaq	8(%rsp), %rdi
+	call    incr
+	addq	8(%rsp), %rax
+	addq	$16, %rsp
+	ret
+```
 
+<p>According to x84-64 System V ABI, before a function is called, the stack pointer %rsp must be 16-byte aligned. </p>
 
+</br>
 
+## Recursion
 
+</br>
 
+```
+long pcount_r(unsigned long x)
+{
+	if(x == 0)
+		return 0;
+	else
+		return (x & 1) + pcount_r(x >> 1);
+}
+```
+
+```
+pcount_r:
+	movl	$0, %eax
+	testq   %rdi, %rdi
+	je		.L6
+	pushq   %rbx
+	movq	%rdi, %rbx
+	andl	$1, %ebx
+	shrq	%rdi
+	call	pcount_r
+	addq	%rbx, %rax
+	popq	%rbx
+.L6
+	rep; ret 
+```
+
+<p>In general, recursive code is going to always generate a bigger blob of code than the iterative version.</p>
+
+</br>
+
+# Chapter Four Data
+
+</br>
+
+<p>Let's look at data in aggregated form, There's two way to do that. One is with arrays where you can create many copies of an identical data type. A second is where you have structs, so you create a small collection of values that can be different types.</p>
+
+<p>The main thing is that at the machine code level there's no notion of an array except to think of it as a collection of bytes(in contiguous). And same with a struct</p>
+
+</br>
+
+## Arrays
+
+</br>
+
+<p>There is no bounds checking in C. So the compiler will happily let you use negative values for array indices, and it will give you a potentially undefined value. </p>
 
 
 
