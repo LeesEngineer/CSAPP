@@ -1248,7 +1248,18 @@ pcount_r:
 
 <p>There is no bounds checking in C. So the compiler will happily let you use negative values for array indices, and it will give you a potentially undefined value. </p>
 
+```
+int get_digit(int z[5], int digit)
+{
+	return z[digit];
+}
+```
 
+```
+movl	(%rdi, %rsi, 4), %eax
+```
+
+<p></p>
 
 
 
