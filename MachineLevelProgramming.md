@@ -1259,14 +1259,102 @@ int get_digit(int z[5], int digit)
 movl	(%rdi, %rsi, 4), %eax
 ```
 
-<p></p>
+```
+void zincr(int z[5])
+{
+	size_t i;
+	for(i = 0; i < 5; i ++)
+		z[i] ++;
+}
+```
 
+```
+  movl	  $0, %eax
+  jmp  	  .L3
+.L4
+  addl	  $1, (%rdi, rax, 4)
+  addq	  $1, %rax
+.L3
+  cmpq    $4, %rax
+  jbe	  .L4
+  ret
+```
 
+<p>You see a pretty close correspondence here between instructions and machine code and constructs in the C programming</p>
 
+<p>What's the real difference is between arrays and pointers in C.</p>
 
+<P>When you declare an array in C, both you're actuallt allocating space and you are creating an array name that allows pointer arithmetic. Whereas when you just declare a pointer, all you're allocating is the space for the pointer itself.</P>
 
+<img width="1960" height="338" alt="QQ_1762388189647" src="https://github.com/user-attachments/assets/c0e9f4a9-ccf9-454b-9231-d9539f1b2c3d" />
 
+<p>Accesses looks similar in C, but address computations difffer greatly</p>
 
+```
+int get_univ_digit(size_t index, size_t digit)
+{
+	return univ[index][digit];
+}
+```
+
+```
+salq	$2, rsi
+addq    univ(, %rdi, 8), %rsi
+movl    (%rsi), %eax
+ret
+```
+
+<hr>
+
+<p>N * N Matrix Code</p>
+
+- Fixed dimensions : Know value of N at compile time
+
+```
+#define N 16
+typedef int fix_matrix[N][N]
+int fix_ele(fix_matrix a, size_t i, size_t j)
+{
+	return a[i][j];
+}
+```
+
+```
+salq	$6, %rsi
+addq	%rsi, %rdi
+movl	(%rdi, %rdx, 4), %eax
+ret
+```
+
+- Variable dimensions, explicit indexing : Traditional way to implement dynamic arrays
+
+```
+#define IDX(n, i, j) ((i) * (n) + (j))
+int vec_ele(size_t n, int *a, size_t i, size_t j)
+{
+	return a[IDX(n, i, j)];
+}
+```
+
+- Variable dimensions, implicit indexing : Now supported by gcc after C99
+
+```
+int var_ele(size_t n, int a[n][n], size_t i, size_t j)
+{
+	return a[i][j];
+}
+```
+
+```
+imulq   %rdx, %rdi
+leaq	(%rsi, %rdi, 4), %rax
+movl	(%rax, %rcx, 4), %eax
+ret
+```
+
+<p>It used to be in C if you wanted to de multi-dimensional arrays, where the size of array was not fixed at compile time, you bassically had to implement your own version of the previous address computation.</p>
+
+<p>After C99, when calling a function you can pass in any integer value for n, and <b>the compiler will calculate the offset based on n.</b></p>
 
 
 
