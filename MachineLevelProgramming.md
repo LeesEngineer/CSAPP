@@ -1352,34 +1352,279 @@ movl	(%rax, %rcx, 4), %eax
 ret
 ```
 
-<p>It used to be in C if you wanted to de multi-dimensional arrays, where the size of array was not fixed at compile time, you bassically had to implement your own version of the previous address computation.</p>
+<p>In the third example n is a parameter that passed to the function, So it's not known at compile time how big a scaling factor to use. You will see that it has to use a multiply instruction to do that, which is a relatively expensive instruction in terms of performance.</p>
 
-<p>After C99, when calling a function you can pass in any integer value for n, and <b>the compiler will calculate the offset based on n.</b></p>
+<p>It used to be in C if you wanted to de multi-dimensional arrays, where the size of array was not fixed at compile time, you bassically had to implement your own version of the previous address computation. After C99, when calling a function you can pass in any integer value for n, and <b>the compiler will calculate the offset based on n.</b></p>
 
+</br>
 
+## Structures
 
+</br>
 
+- Structure represented as block of memory
 
+  1. Big enough to hold all of the fields
+ 
+- Fields ordered according to declaration
 
+  1. Even if another ordering could yield a more compact representation
+ 
+- Compiler determines overall size + positions of fields
 
+  1. Machine-level program has no understanding of the structures in the source code
 
+<p>Compiler will keep track of where each of these fields start, and generate the appropriate code to offset from the beginning, so the reference to structure is the beginning address of itself. Adnd then I'll use appropriate offset to get the different fields.</p>
 
+```
+struct rec
+{
+	int a[4];
+	size_t i;
+	struct rec *next;
+};
+```
 
+```
+int *getap(struct rec *r, size_t idx)
+{
+	return &r->a[idx];
+}
+```
 
+```
+leaq (%rdi, %rsi, 4), %rax
+ret
+```
 
+<hr>
 
+<p>Structures & Alignment</p>
 
+```
+struct S1
+{
+	char c;
+	int i[2];
+	double v;
+} *p;
+```
 
+- Unaligned Data
 
+<img width="1478" height="208" alt="QQ_1762500206964" src="https://github.com/user-attachments/assets/5864ccb9-aa91-4553-8051-2215bbd8fbb4" />
 
+- Aligned Data
+ 
+<img width="2000" height="548" alt="QQ_1762500297294" src="https://github.com/user-attachments/assets/156dcfea-8198-4f3d-b654-b2b421c79850" />
 
+<p>The machine generally prefers that if you have a data type of K bytes, then the address that starts at will be a multiple of k. So that introduce a property we call alignment, when a structure gets allocated, the compiler will insert some blank unused bytes in the data structure.</p>
 
+<p>Alignment Principles</p>
 
+- Aligned Data
 
+  1. Primitive data type requires K bytes
+ 
+  2. Address must be multiple of K
+ 
+  3. Required on some machines; advised on x86-64
+ 
+- Motivation for Aligning Data
 
+  1. Memory accessed by (aligned) chunks of 4 or 8 bytes (system dependent), If your data falls exactly within the block boundary, the CPU can retrieve it all in one go, otherwise, it will require two steps.
+ 
+     - Inefficient to load or store datum that spans quad word boundaries
+    
+     - Virtual memory trickier when datum spans 2 pages
+    
+- Compiler
 
+  1. Inserts gaps in structure to ensure correct alignment of fields
 
+<p>On some machines, if you try to do an unwind access it will actually cause a memory fault.</p>
 
+<hr>
+
+<p>Overall Alignment Requirement (Arrays of structures)</p>
+
+- For largest alignment requriement K
+
+- Overall structure must be multiple of K
+
+<p>Example : </p>
+
+```
+struct S2
+{
+	double v;
+	int i[2];
+	char c;
+};
+```
+
+<img width="2030" height="200" alt="QQ_1762505954123" src="https://github.com/user-attachments/assets/81215e26-c598-4ff6-a234-f50103cc3442" />
+
+<p>For this one, because it contains a double. The overall data structure has to be aligned on an 8 byte boundary.</p>
+
+<p>It will add bytes to the end to make sure that the overall size of the data structure meets whatever underlying alignment requiremnet there is. </p>
+
+<hr>
+
+```
+struct S3
+{
+	short i;
+	float v;
+	short j;
+} a[10];
+```
+
+<img width="1886" height="454" alt="QQ_1762506432589" src="https://github.com/user-attachments/assets/c93cb798-60fb-4d05-8ad8-968e6d73b8e6" />
+
+- Compute array offset 12 * idx
+
+- Element j is at offset 8 within structure
+
+- Assembler gives offset a+8 (Resolved during linking)
+
+```
+short get_j(int idx)
+{
+	return a[idx].j;
+}
+```
+
+```
+leaq	(%rdi, %rdi, 2), %rax
+movzwl  a + 8(, %rax, 4), %eax
+```
+
+<hr>
+
+<p>Saving space : Put large data types first</p>
+
+<img width="1458" height="380" alt="QQ_1762507267911" src="https://github.com/user-attachments/assets/ab8f8754-e1b3-499c-8e48-aac719c89076" />
+
+<p>Effect : </p>
+
+<img width="922" height="260" alt="QQ_1762507312562" src="https://github.com/user-attachments/assets/71946855-08fa-4d88-9694-d85ebef63382" />
+
+</br>
+
+## Floating Point
+
+</br>
+
+<p>XMM registers are a special class of registers used for floating-point and vector calculations in the x86-64 architecture.</p>
+
+<p>The XMM is a set of 128-bit registers (16 bytes) used in the SSE instruction set (Streaming SIMD Extensions).</p>
+
+<p>SSE is an instruction extension introduced by Intel during the Pentium III era to accelerate:</p>
+
+- Floating-point calculations (float/double)
+
+- Vector operations (such as image processing and signal processing)
+
+- Matrix calculations (such as in deep learning or computer graphics)
+
+<img width="1846" height="1348" alt="QQ_1762508389822" src="https://github.com/user-attachments/assets/86c77dc9-e240-4db2-89af-d77afab0d260" />
+
+<p>There are 16 special registers distinct from the other registers. Then there're operations that can operate on these and treat them in different ways. One is to treat such a register as an array of 16 chars or as 8 shorts or 4 ints, and also support double floating-point arithmetic.</p>
+
+- Scalar Operations : Single Precision -- addss    %xmm0, %xmm1
+
+<img width="2016" height="370" alt="QQ_1762508935478" src="https://github.com/user-attachments/assets/aa504882-61e1-4f2b-a3d0-61a73ec86890" />
+
+- SIMD (Single Instruction Multiple Data) Operations : Single Precision -- addps    %xmm0, %xmm1
+
+<img width="2010" height="366" alt="QQ_1762509007578" src="https://github.com/user-attachments/assets/ed9330ab-767f-4ecb-b26c-b65dbd0c74fc" />
+
+- Scalar Operations : Double Precision -- addsd    %xmm0, %xmm1
+
+<img width="1784" height="374" alt="QQ_1762509090278" src="https://github.com/user-attachments/assets/0ce0b2ee-74e4-4773-90e6-3787d27b6a38" />
+
+<p>We will see if you write code to make use of these instructions you can really boost the performance of the compiler</p>
+
+</br>
+
+### FP Basics
+
+</br>
+
+- Arguments passed in %xmm0, %xmm1, ...
+
+- Result returned in %xmm0
+
+- All XMM registers caller-saved
+
+```
+float fadd(float x, float y)
+{
+	return x + y;
+}
+```
+
+```
+addss    %xmm1, %xmm0
+ret
+```
+
+```
+double fadd(double x, double y)
+{
+	return x + y;
+}
+```
+
+```
+addsd    %xmm1, %xmm0
+ret
+```
+
+<p>FP memory referencing</p>
+
+```
+double dincr(double *p, double v)
+{
+	double x = *p;
+	*p = x + v;
+	return x;
+}
+```
+
+```
+# p in %rdi, v in %xmm0
+movapd		%xmm0, %xmm1
+movsd		(%rdi), %xmm0
+addsd		%xmm0, %xmm1
+movsd		%xmm1, (%rdi)
+ret
+```
+
+<p>Other Aspects of FP Code</p>
+
+- Lots of instructions
+
+- Floating-point comparisions
+
+  1. Instructions ucomiss and ucomisd
+ 
+  2. Set conditional codes CF, ZF, and PF
+
+- Using constant values : The SSE registers cannot be directly loaded with floating-point constants with immediate values.
+
+  1. Set %xmm0 to 0 with instruction `xorpd		%xmm0, %xmm0`
+ 
+  2. Others loaded from memory
+ 
+</br>
+
+# Chapter five 
+
+</br>
+
+ 
 
 
 
