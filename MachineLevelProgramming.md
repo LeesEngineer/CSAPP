@@ -1620,9 +1620,78 @@ ret
  
 </br>
 
-# Chapter five 
+# Chapter five -- Advanced-Topics
 
 </br>
+
+<p>We call it advanced topics but think of it more as miscellaneous topics.</p>
+
+</br>
+
+## Memory Layout
+
+</br>
+
+<p>What does the memory look like when you're running x86-64 programs.</p>
+
+<p>x86-64 Linux Memory Layout : (now the machines limit you to actually only 47 bits of address)</p>
+
+<p>Conceptually a memory is just a big array of bytes. And that's the view of the machine level programmer, even though that's not the actual implementation.</p>
+
+<p>The whole part is called virtual memory, the organization looks very simple. But the underlying implementation is a complex management of various different memory types from disk memories to solid state disks, and to what's called DRAM which stands for dynamic RAM.</p>
+
+- Stack
+
+  1. Runtime stack (8MB limit)
+ 
+  2. E.g. local variables
+ 
+- Heap
+
+  1. Dynamically allocated as needed
+ 
+  2. When call malloc(), calloc(), new()
+ 
+- Data
+
+  1. Statically allocated data
+ 
+  2. E.g. global vars, static vars, string constants
+ 
+- Text / Shared libraries
+
+  1. Excutable machine instructions
+ 
+  2. Read-Only
+ 
+<img width="354" height="1354" alt="QQ_1762524482143" src="https://github.com/user-attachments/assets/2de49a9e-fb56-4e49-b4ed-ca29fb1f5dcd" />
+
+```
++-------------------------+  ← 高地址
+| Stack (栈)              |
+|   ↓ 向下增长             |
++-------------------------+
+| Heap (堆)               |
+|   ↑ 向上增长             |
++-------------------------+
+| Uninitialized Data (BSS)|
++-------------------------+
+| Initialized Data (.data)|
++-------------------------+
+| Read-Only Data (.rodata)|
++-------------------------+
+| Text (代码段)            |
++-------------------------+  ← 低地址
+```
+
+<p>The stack size is limited to 8192 kb, and what that means is if you tried to access any memory via the stack pointer that was outside of the range of this 8 mb, you'd get a segmentation fault.</p>
+
+<p></p>
+
+
+
+
+
 
  
 
