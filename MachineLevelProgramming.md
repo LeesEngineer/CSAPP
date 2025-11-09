@@ -1667,12 +1667,12 @@ ret
 <img width="354" height="1354" alt="QQ_1762524482143" src="https://github.com/user-attachments/assets/2de49a9e-fb56-4e49-b4ed-ca29fb1f5dcd" />
 
 ```
-+-------------------------+  ← 高地址
-| Stack (栈)              |
-|   ↓ 向下增长             |
++-------------------------+  ← Top
+| Stack                   |
+|   ↓ decrease            |
 +-------------------------+
-| Heap (堆)               |
-|   ↑ 向上增长             |
+| Heap                    |
+|   ↑ increase            |
 +-------------------------+
 | Uninitialized Data (BSS)|
 +-------------------------+
@@ -1680,15 +1680,15 @@ ret
 +-------------------------+
 | Read-Only Data (.rodata)|
 +-------------------------+
-| Text (代码段)            |
-+-------------------------+  ← 低地址
+| Text                    |
++-------------------------+  ← Bottom
 ```
 
 <p>The stack size is limited to 8192 kb, and what that means is if you tried to access any memory via the stack pointer that was outside of the range of this 8 mb, you'd get a segmentation fault.</p>
 
-<p></p>
+<p>We call where the code (executable program) is sitting the text segment </p>
 
-
+<p>And then the data, first of all there'll be a section for the data that's allocated at the program begins.</p>
 
 
 
