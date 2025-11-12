@@ -1688,11 +1688,11 @@ ret
 
 <p>We call where the code (executable program) is sitting the text segment </p>
 
-<p>And then the data, first of all there'll be a section for the data that's allocated at the program begins.</p>
+<p>And then the data, first of all there'll be a section for the data that's allocated at the program begins. So any global variables that you've declared will be in that section.</p>
 
+<p>And then the heap is the part of memory that is allocated via call to malloc or one of its related functions. These variables varies dynamically as the program runs. It starts off with a small allocation and every time you call malloc and if you're not freeing memory, your memory requirements will keep growing. It will keep moving to larger addresses.</p>
 
-
-
+<p>There is another place in memory for storing the code. The code that gets brought in that represents the library functions like printf and malloc. They are usually stored on the disk. And they get brought in when they get linked into your program when it firstly starts executing by a process known as <b>dynamic linking</b>.</p>
  
 
 
