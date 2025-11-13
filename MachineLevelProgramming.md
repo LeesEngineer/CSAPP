@@ -1828,6 +1828,16 @@ fun(6) -> Segmentation fault
 - Why a big deal
 
   -  It's the #1 technical cause of security
+ 
+     - #1 overall cause is social engineering / user ignorance
+   
+- Most common form
+
+  1. Unchecked lengths on string inputs
+ 
+  2. Particularly for bounded character arrays on the stack
+ 
+     - Sometimes referred to as stack smashing
 
 
 
