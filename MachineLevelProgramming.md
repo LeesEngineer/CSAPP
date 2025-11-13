@@ -1839,11 +1839,36 @@ fun(6) -> Segmentation fault
  
      - Sometimes referred to as stack smashing
 
+<p>local char buf[100] that gets overflowed: An classic stack smashing, <b>can overwrite the saved frame pointer or return address.</b></p>
 
+<p>String Library code:</p>
 
+- Implementation of Unix function gets()
 
+  - No way to specify limit on number of characters to read
 
+```
+char *gets(char *dest)
+{
+	int c = getchar();
+	char *p = dest;
+	while (c != EOF && c != '\n')
+	{
+		*p++ = c;
+		c = getchar();
+	}
+	*p = '\0';
+	return dest;
+}
+```
 
+- Similiar problems with other library functions
+
+  1. strcpy, strcat: Copy strings of arbitrary length
+ 
+  2. scanf, fscanf, sscanf, when given %s conversion specifier are used.
+
+<p>Without knowing in advance how big that string is, it's possible that it will be too big for the buffer that's been allocated.</p>
 
 
 
