@@ -1693,35 +1693,141 @@ ret
 <p>And then the heap is the part of memory that is allocated via call to malloc or one of its related functions. These variables varies dynamically as the program runs. It starts off with a small allocation and every time you call malloc and if you're not freeing memory, your memory requirements will keep growing. It will keep moving to larger addresses.</p>
 
 <p>There is another place in memory for storing the code. The code that gets brought in that represents the library functions like printf and malloc. They are usually stored on the disk. And they get brought in when they get linked into your program when it firstly starts executing by a process known as <b>dynamic linking</b>.</p>
+
+<p>Memory Allocation Example:</p>
  
+```
+char big_array[1L << 24]; 	// 16 MB
+char huge_array[1L << 31]; 	// 2  GB
 
+int global = 0;
 
+int useless() {return 0;}
 
+int main()
+{
+	void *p1, *p2, *p3, *p4;
+	int local = 0;
+	p1 = malloc(1L << 28);  // 256 MB
+	p2 = malloc(1L << 8);   // 256 B
+	p3 = malloc(1L << 32);	// 4   GB
+	p4 = malloc(1L << 8);	// 256 B
+}
+```
 
+<img width="1834" height="1428" alt="be02f9e2589dc2c7a02c62edc7f7ce25" src="https://github.com/user-attachments/assets/b44056e8-dfff-4142-8355-eeaf428fc081" />
 
+<p>For one reason or another , it happens that the smaller chunks of memory allocations are allocated at address that are actually just a little bit above the pink section. The really big chunks of memory are allocated near the stack limit.</p>
 
+<p>In general, what's happening is if you are to reference a memory address in this empty range, you'd get a segmentation fault.(Actually, the empty range doesn't have a corresponding physical memory mapping) If you keep allocating more with malloc, it will push the limits of what's addressable inward. In principle if you have got too much of a memory request, these two would hit each other and malloc would return zero.</p>
 
+<hr>
 
+<p>So why malloc allocations don’t all sit next to each other.</p>
 
+<p>This is related to the underlying implementation strategy of malloc in glibc(GUN C Library). In C, glibc's malloc implementation chooses two different allocation methods depending on the requested size.</p>
 
+| Allocation type | System Call | Typical Usage                                                            | Characteristics                                                          |
+|-----------------|-------------|--------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| Samll Chunks    | brk/sbrk    | Usually for allocations smaller than a certain threshold (around 128 KB) | Allocates from a growing contiguous heap; Fast                           |
+| Large Chunks    | mmap        | Used for large allocations (Exceeding the threshold)                     | Creates independent mappings; doesn't affect the main heap; easy to free |
 
+<p>brk/sbrk</p>
 
+- The brk system call adjusts the end of the heap segment
 
+- All memory obtained this way forms one contiguous heap region
 
+- When freeing memory, if the freed block isn't at the very top of the heap, it cannot be returned to the OS(It can only be reused internally)
 
+```
+Heap layout:
+| stack | <-- high address
+|       |
+| heap  | <--- brk extends this upward
+| data  |
+| text  | <-- low address
+```
 
+<p>mmap</p>
 
+- mmap asks the kernal to create separate virtual memory mappings, which can be freed individually.
 
+- Suitable for large allocations, since it can release memory back to the OS immediately via munmap()
 
+- These allocations are non-contiguous and independent of the main heap
 
+<p>To summarize :</p>
 
+```
+[stack grows downward] <- High addresses
+[unmapped gap]
+[mmap region (large mallocs, shared libs, etc.)]
+[unmapped gap]
+[heap grows upward]
+[text / data / bss]    <- Low addresses
+```
 
+<p>The operating system intentionally arranges memory like this : </p>
 
+- The heap grows upward from low addresses
 
+- The heap grows downward from high addresses
 
+- The mmap region and empty gaps lie in between
 
+<p>This design gives flexibility.</p>
 
+- Prevent interference between the heap and stack
 
+- Allow mmap to flexibly find available space between them
+
+- Improve memory allocation flexibility(Some libraries, file mappings and anonymous mappings all rely on mmap)
+
+</br>
+
+## Buffer Overflow
+
+</br>
+
+<p>When you're running GDB it helps a lot when you're looking at these different addresses.</p>
+
+<p>Recall: Memrory Referencing Bug</p>
+
+```
+typedef struct
+{
+	int a[2];
+	double d;
+} struct_t;
+
+double fun(int i)
+{
+	volatile struct_t s;
+	s.d = 3.14;
+	s.a[i] = 1073741824; // Possibly out of bound
+	return s.d;
+}
+```
+
+```
+fun(0) -> 3.14
+fun(1) -> 3.14
+fun(2) -> 3.1399998664856
+fun(3) -> 2.00000061035156
+fun(4) -> 3.14
+fun(6) -> Segmentation fault
+```
+
+<p>Such problems are a big deal</p>
+
+- Generally called a "buffer overflow"
+
+  - When exceeding the memory size allocated for an array
+ 
+- Why a big deal
+
+  -  It's the #1 technical cause of security
 
 
 
