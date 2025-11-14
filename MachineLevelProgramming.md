@@ -1868,14 +1868,54 @@ char *gets(char *dest)
  
   2. scanf, fscanf, sscanf, when given %s conversion specifier are used.
 
-<p>Without knowing in advance how big that string is, it's possible that it will be too big for the buffer that's been allocated.</p>
+<p>Without knowing in advance how big that string is, it's possible that it will be too big for the buffer that's been allocated. One of the culprits is there's a whole class of library functions that don't perform any kinds of bounds checking. There's not an argument to the function that tells the function when it has to stop when it reach the limit.</p>
+
+<p>Vulnerable Buffer Code</p>
+
+```
+void echo()
+{
+	char buf[4];
+	gets(buf);
+	puts(buf);
+}
+
+void call_echo()
+{
+	echo();
+}
+```
 
 
 
+<p>Actually it can't handle more than three chars, bacause there should be room for the null character.</p>
 
+<p>Call here a-nsp (Meaning no stack protector, we'll see what's nsp later)</p>
 
+<p>Type a string : 012345678901234567890123. Output : 012345678901234567890123; Type a string : 0123456789012345678901234. It will hit a segmentation fault. (core dumped)</p>
 
+<p>Observe it through assembly.</p>
 
+```
+00000000004006cf <echo>:
+4006cf:    48 83 ec 18          sub    $0x18, %rsp
+4006d3:    48 89 e7             mov    %rsp, %rdi
+4006d6:    e8 a5 ff ff ff       callq  400680 <gets>
+4006db:    48 89 e7             mov    %rsp, %rdi
+4006de:    e8 3d fe ff ff       callq  400520 <puts@plt>
+4006e3:    48 83 c4 18          add    $0x18, %rsp
+4006e7:    c3                   retq
+```
+
+```
+4006e8:    48 83 ec 08          sub    $0x8, %rsp
+4006ec:    b8 00 00 00 00       mov    $0x0, %eax
+4006f1:    e8 d9 ff ff ff       callq  4006cf <echo>
+4006f6:    48 83 c4 08          add    $0x8, %rsp
+4006fa:    c3                   retq
+```
+
+<p></p>
 
 
 
