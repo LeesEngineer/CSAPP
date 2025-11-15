@@ -1915,7 +1915,7 @@ void call_echo()
 4006fa:    c3                   retq
 ```
 
-<p></p>
+<p>The first line is the code where you can tell how much memory get allocated for the buffer. 0x18 is 24 in decimal.</p>
 
 
 
