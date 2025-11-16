@@ -1911,19 +1911,63 @@ void call_echo()
 4006e8:    48 83 ec 08          sub    $0x8, %rsp
 4006ec:    b8 00 00 00 00       mov    $0x0, %eax
 4006f1:    e8 d9 ff ff ff       callq  4006cf <echo>
-4006f6:    48 83 c4 08          add    $0x8, %rsp
+4006f6:    48 83 c4 08          add    $0x8, %rsp 		# return address
 4006fa:    c3                   retq
 ```
 
-<p>The first line is the code where you can tell how much memory get allocated for the buffer. 0x18 is 24 in decimal.</p>
+<p>The first line is the code where you can tell how much memory get allocated for the buffer. 0x18 is 24 in decimal. A region of 24 bytes is allocated on the stack. And it's copying %rsp to %rdi. So gets is being called with a pointer to a buffer of size 24 </p>
 
+</br>
 
+### Buffer Overflow Stack
 
+</br>
 
+<img width="714" height="782" alt="QQ_1763218256276" src="https://github.com/user-attachments/assets/c5f94c0c-2bcc-421c-bbe9-7b2ee7ef35a1" />
 
+<p>Let's see memory layout. The buffer normally big enough for four characters. There's 20 bytes unused.</p>
 
+<p>So once I input beyond 23 charachers plus the null character, you'll see what I'm doing is corrupting the byte representation of the return address. So what happened for `0123456789012345678901234` here is rather than trying to return back to where call_echo called echo, it goes back to some other part of your code.(A segmentation fault occurs when program tries to access an address that is not allowed to access.)</p>
 
+<p>For `012345678901234567890123` here I actually did overflow the buffer. The fact that iy didn't collapse was just a coincidence. "Returns" to unrelated code.</p>
 
+<img width="1676" height="972" alt="QQ_1763274630603" src="https://github.com/user-attachments/assets/4c70be89-4dbb-43ea-a2ba-853108853999" />
+
+</br>
+
+### Code Injection Attacks
+
+</br>
+
+```
+void P()
+{
+	Q();
+	...
+}
+
+int Q()
+{
+	char buf[64];
+	gets(buf);
+	...
+	return ...;
+}
+```
+
+<img width="1108" height="1016" alt="847c3bd5d00bad1bd18c9d7ed75c35d3" src="https://github.com/user-attachments/assets/0d69b3dd-c62a-4bd2-9ea5-71027bbdd180" />
+
+- Input string contains byte representation of excutable code
+
+- Overwrite retrurn address A with address of buffer B
+
+- When Q() excutes ret, will jump to exploit code
+
+<p>A buffer overflow gives an attacker the opportunity to inject code into a program and execute it. The general idea is that there is a buffer which the attacker can fill with arbitrary bytes by supplying input to functions like gets or any other function that copies data without checking the length. The attacker places a sequence of bytes into this buffer that encodes executable machine instructions.</p>
+
+<p>After writing the injected code into the buffer, the attacker may need to add some padding bytes whose actual values do not matter—in order to overwrite the return address correctly. The value B is chosen to be an address on the stack that corresponds to the beginning of this buffer, which is where the injected code resides.</p>
+
+<p>When the function returns, it is supposed to jump back to its caller at address P. However, because the return address on the stack has been overwritten with B, the program counter will instead jump to B and begin executing the attacker’s injected instructions.</p>
 
 
 
