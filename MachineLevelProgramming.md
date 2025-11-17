@@ -1,5 +1,3 @@
-<img width="1104" height="1006" alt="8657f9d1218f2b475c6ed0370ab44acf" src="https://github.com/user-attachments/assets/898dff23-80a5-4c0d-a391-062ac1817670" /># Chapter One Basics
-
 </br>
 
 ## MachineLevelProgramming
