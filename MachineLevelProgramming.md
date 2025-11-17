@@ -1,4 +1,4 @@
-# Chapter One Basics
+<img width="1104" height="1006" alt="8657f9d1218f2b475c6ed0370ab44acf" src="https://github.com/user-attachments/assets/898dff23-80a5-4c0d-a391-062ac1817670" /># Chapter One Basics
 
 </br>
 
@@ -1969,33 +1969,194 @@ int Q()
 
 <p>When the function returns, it is supposed to jump back to its caller at address P. However, because the return address on the stack has been overwritten with B, the program counter will instead jump to B and begin executing the attacker’s injected instructions.</p>
 
+<p>When you're trying to replace code, how do you make sure that your new number B provides the exactly address. It's pretty easy. For example, in previous one I could tell that it was allocating 24 bytes for the buffer, so I just make sure that the length of my exploit code plus the padiing is 24 bytes, then right after that comes the return address.</p>
 
+<hr>
 
+<p>What to do about buffer overflow attacks</p>
 
+- Avoid overflow vulnerabilities
 
+  - For example, use library routines that limit string lengths
+ 
+    1. fgets instead of gets
+   
+    2. strncpy instead of strcpy
+   
+    3. Don't use scanf with %s conversion specification
+   
+       - Use fgets to read the string
+      
+       - or use %ns where n is a suitable integer
 
+- Employ system-level protections
 
+  - ASLR (Address Space Layout Randomization) : Randomized stack offsets : Stack repositioned each time program executes
+ 
+    1. At start of program, allocate random amount of space on stack
+   
+    2. Shifts stack addresses for entire program
+   
+    3. Makes it difficult for hacker to predict beginning of inserted code
+   
+    4. All the local storage on the stack will shift up and down from one run to another(The allocation by malloc also has randomness)
+   
+  - Nonexecutable code segments
+ 
+    1. In traditional x86, can mark region of memory as either "read-only" or "writeable" : Can execute anything readable
+   
+    2. X86-64 added explicit "execute" permission
+   
+    3. Stack marked as non-executable. Any attempt to execute this code will fail
 
+- Have compiler use "stack canaries"
 
+  - Idea
+ 
+    1. Place special value ("canary") on stack just beyond buffer
+   
+    2. Check for corruption before exiting function
+   
+  - GCC Implementation
+ 
+    1. -fstack-protector
+   
+    2. Now the default(disabled earlier)
 
+<img width="1108" height="470" alt="QQ_1763359388835" src="https://github.com/user-attachments/assets/c3971d1d-19cf-42e8-a963-67b6e8e9d121" />
 
+<p>Lets see what that canary code looks like:</p>
 
+```
+echo:
+40072f:    sub     $0x18, %rsp
+400733:    mov     %fs:0x28, %rax					/
+40073c:    mov     %rax, 0x8(%rsp)					/
+400741:    xor     %eax, %eax
+400743:    mov     %rsp, %rdi
+400746:    callq   4006e0 <gets>
+40074b:    mov     %rsp, %rdi
+40074e:    callq   400570 <puts@plt>
+400753:    mov     0x8(%rsp), %rax					/
+400758:    xor     %fs:0x28, %rax					/
+400761:    je      400768 <echo+0x39>
+400763:    callq   400580 <__stack_chk_fail@plt>	/
+400768:    add     $0x18, %rsp
+40076c:    retq
+```
 
+<p>%fs:0x28 is the address of the stack canary. On 64-bit Linux, %fs is a segment register used to access TLS(Thread Local Storage). Inside TLS, there is a region reserved by glibc, which stores various thread-local data:</p>
 
+- The stack canary(Stack protector value)
 
+- errno
 
+- pthread-related value
 
+- TLS module pointers
 
+`FS segment base + offset 0x28 = the address of the stack canary`
 
+<img width="580" height="942" alt="QQ_1763363453001" src="https://github.com/user-attachments/assets/39581cce-6520-41d5-aba3-c1ea544c6e14" />
 
+<p>At offset 8 from the stack pointer it's putting a value in 8 bytes, storing it as canary value</p>
 
+<hr>
 
+<p><b>Return-Oriented Programming Attacks</b></p>
 
+- Challenge for hacker
 
+  1. Stack randomization makes it hard to predict buffer location
+ 
+  2. Marking stack nonexecutable makes it hard to insert binary code
+ 
+- Alternative Strategy
 
+  1. Use existing code
+ 
+     - E.g., library code from stdlib
+    
+  2. String together fragments to achieve overall desired outcome
+ 
+  3. Doesnot overcome stack canaries
+ 
+- Construct program from gadgets
 
+  1. Sequence of instructions ending in ret : Encoded by single byte 0x3c
+ 
+  2. Code positions fixed from run to run
+ 
+  3. Code is executable
 
+<p>Stack canaries are extremely effective, and unless an attacker can leak their value, there’s essentially no way to bypass them. But the other two protections—stack randomization and a non-executable stack—can still be worked around.</p>
 
+<p>Stack randomization only changes where the stack is located; it does not randomize the locations of global variables or the program’s code segment. This means that even though the attacker cannot reliably find their buffer on the stack, the code segment of the program or shared libraries still remains at predictable or discoverable addresses.</p>
+
+<p>Since the attacker cannot inject and execute their own code because of the non-executable stack, a different strategy is used: reusing existing code. If the attacker can locate the program’s code or library code, they can chain together many small instruction sequences—called gadgets—each ending with a ret. By arranging these gadget addresses on the stack, the attacker can construct a meaningful sequence of operations using only existing instructions, achieving arbitrary behavior without injecting new code.</p>
+
+<p>Example #1 : Use tail end of existing functions</p>
+
+```
+long ab_plus_c(long a, long b, long c)
+{
+	return a * b + c;
+}
+```
+
+```
+00000000004004d0 <ab_plus_c>:
+4004d0:   48 0f af fe          imul   %rsi, %rdi
+4004d4:   48 8d 04 17          lea    (%rdi,%rdx,1), %rax
+4004d8:   c3                   retq
+```
+
+<p>Gadget address : 0x4004d4</p>
+
+<p>Example #2 : Repurpose byte codes</p>
+
+```
+void setval(unsigned *p)
+{
+	*p = 3347663060u;
+}
+```
+
+```
+<setval>:
+4004d9:		c7 07 d4 48 89 c7	movl $c78948d4, (%rdi)
+4004df:		c3					retq
+```
+
+<p><b>48 89 c7 encodes : movq	%rax, %rdi</b></p>
+
+<p>Gadget address : 0x4004dc</p>
+
+<img width="1300" height="564" alt="QQ_1763369923592" src="https://github.com/user-attachments/assets/922d9cdb-39b0-44f1-8392-26fe513bf08d" />
+
+- Trigger with ret instruction
+
+  - Will start executing Gadget 1
+ 
+- Final ret in each gadget will start next one
+
+<p>Imagine I fill up my buffer instead of with executable code, I could fill it up with a series of gadget addresses.</p>
+
+<p>It's using the peculiar behavior of how return works in x86.</p>
+
+</br>
+
+## Union
+
+</br>
+
+<p>Union Allocation</p>
+
+- Allocate according to larget element
+
+- Can only use one field at a time
+
+<p>Use union to access bit pattern : When you take a unsigned value and you cast it to a float, you actually changed the bits. But union doesn't change the bit.</p>
 
 
 
