@@ -27,7 +27,7 @@
   1. potential memory "aliasing"
  
   2. potential procedure side-effect
- 
+
 <p>Limitations of optimizing compiler : Compiler has a whole cookbook of optimization strategies. But in general if compiler feels like the code is something that It doesn't feel confident about being able to make certain transformations, it just won't and it will keep things a more direct implementation of exactly what you described.</p>
 
 - Operate under fundamental constraint
@@ -38,9 +38,43 @@
 
 - Behavior that may be obvious to the programmer can be obfuscated by languages and coding styles
 
-  1. e.g., Data ranges may be more limited 
+  1. e.g., Data ranges may be more limited than variable types suggested
+ 
+- Most analysis is performed only within procedures
 
+  1. Whole-program analysis is too expensive in most cases
+ 
+  2. Newer versions of GCC do interprocedural analysis within individual files, but not between code in different files
+ 
+- Most analysis is based only on static information
 
+  1. Compiler has difficulty anticipating run-time inputs
+ 
+- When in doubt, the compiler must be conservative
+
+</br>
+
+# Generally Useful Optimizations
+
+</br>
+
+<p></p>
+
+</br>
+
+# Optimization Blockers
+
+</br>
+
+<p></p>
+
+</br>
+
+# Exploiting Code injection
+
+</br>
+
+<p></p>
 
 
 
