@@ -538,21 +538,64 @@ void unroll2_combine(vec *v, data_t *dest)
 
 - Instruction control Unit must work well ahead of Execution Unit to generate enough operations to keep EU busy
 
+<img width="1918" height="598" alt="QQ_1764320642788" src="https://github.com/user-attachments/assets/38ffa43b-55cc-4a96-be52-ba705888a44f" />
+
 - When encounters conditional branch, cannot reliably determine where to continue fetching
 
-<p>To simplify, you can think of your program as long linear sequence of instructions. CPU trying to grab as many of instructions as they can, and pull them apart.</p>
+<p>To simplify, you can think of your program as long linear sequence of instructions. CPU trying to grab as many of instructions as they can, and pull them apart. <b>To avoid starving the EU, the ICU (Instruction Control Unit) must prepare several instructions ahead.</b></p>
+
+<p>But branches break everythiong.</p>
+
+```
+if (x > 0)
+    do_A();
+else
+    do_B();
+```
+
+<p>Before the CPU evaluates x > 0, it can't know which instructions should I fetch next.(It's data dependent)</p>
 
 <p>Some program is a loop, and there're not many instructions in the loop. So how to turn it into a linear sequence. That relies on how do you handle branches.</p>
-![Photo on 2025-11-24 at 22 32 #2](https://github.com/user-attachments/assets/58ba7478-bdaa-4026-8b51-27d66b657504)
 
+<p>The way to handle it on a modern processor is by doing what's known as branch prediction which is essentially just to guess which branch is going to be taken or not. Then CPU start executing along the predicted direction.</p>
 
+<img width="1834" height="1306" alt="QQ_1764321179230" src="https://github.com/user-attachments/assets/2568b592-193a-4197-aa06-03375e77c594" />
 
+<p>Your Loop: </p>
 
+```
+loop:
+   A
+   B
+   C
+   if(i < n) goto loop
+```
 
+<p>CPU behavior: 	1. Predicts that the loop continues. 2.	Starts fetching A, B, C again—before knowing the actual result. 3. Execution stays continuous, like: ABCABCABC....</p>
 
+<p>It's a pretty guess: It won't jump, just keeping doing and allows you to hit the end of the loop. That's what "Turning it into a linear sequence" means.</p>
 
+<p>If the prediction is right you can just keep going. If the prediction is false and it will throw up a flag and say stop, it will discards all the work it did speculatively (pipeline flush) and restarts at the correct instruction address.(That costs 10-20 cycles or even more)</p>
 
+<img width="1808" height="1322" alt="QQ_1764323482725" src="https://github.com/user-attachments/assets/1b0257d3-437a-40a3-8366-50ba74b382ac" />
 
+<p>What will happen if you keep going is a flag will say no it's invalid. It will go back and cancel all the instructions that have been fetched or executed.</p>
+
+<p>However, for registers, those instructions that supposedly modify them don't actually modify them. It has multiple copies of all the registers. The result of each register calculation is stored in these copies sequentially. So when it's time to cancel the instructions, just cancels out those pending updates to registers.</p>
+
+<p>There's a big block called register renaming unit in CPU. Each register has several hundreds of virtual registers(copies) to keep pending updates.</p>
+
+<p>We have talked about the difference between conditional moves and conditional jumps to implement conditional operations. Conditional moves can kake place totally within the pipeline structure. But a conditional jump(if it's an unpredictable branch ) might do a lot of wasted work and even worse than is when it has to restart it takes a while to fill up all the buffers in the system</p>
+
+<hr>
+
+<p>Tune code for machine: </p>
+
+- Exploit instruction-level parallelism
+
+- Avoid unpredictable branches
+
+- Make code cache-friendly
 
 
 
