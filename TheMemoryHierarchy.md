@@ -16,7 +16,55 @@
 
 <img width="2090" height="554" alt="QQ_1764589773467" src="https://github.com/user-attachments/assets/142f66ae-3005-46c1-bfb7-c886f75f6d3b" />
 
-<p></p>
+<p>DRAM constantly needs to be refreshed, so if you don't hit it with a voltage, it will lose the information need to be stored.(If you don’t refresh, the charge disappears.) SRAM is a lot more reliable than DRAM, so we find SRAMs being used in these small fast memories on chip called cache memories. And then DRAM is the workhorse used in main memories and and the frame buffers associated with graphics cards. </p>
+
+</br>
+
+## Nonvolstile Memories
+
+</br>
+
+<p>DRAM and SRAM are volatile, if they are powered off they will lose all the information.</p>
+
+<p>There's a different another kind of memory called nonvolatile memory which retains value even if powered off. There's a whole bunch of these things that so called up read-only memory(ROM). So the generic name for these nonvolatile memories is ROM. Previously, many of these original ROMs of different types could only be hard-coded once during their chip manufacturing process. Now, there're improvements in the way that ROMs could be programmed and in how they were erased, so they could be reprogrammed.</p>
+
+<p>The what we have today the modern form of ROM is called flash memory which provides the capability of erasing(You can delete the storage blocks on the flash memory). And the downside is that flash memories would wear out after about a hundred thousand erasers.</p>
+
+- Read-only memory(ROM): programmed during production
+
+- Programmable ROM(PROM): can be programmed once
+
+- Eraseable PROM(EPROM): can be bulk erased
+
+- Electrically eraseable PROM(EEPROM): electronic erase capability
+
+- Flash memory: EEPROMs, with partial (block-level) erase capability. (Wears out after about 100,000 erasings)
+
+<p>Uses for Nonvolatile Memories: </p>
+
+- Firmware programs stored in a ROM (BIOS, controllers for disks, network cards, graphics accelerators, security subsystems, ...)
+
+- Solid state disks (replace rotating disks in thumb drives, ...)
+
+- Disk caches
+
+<p>The BIOS, which is invoked when you turn on your computer, and the initial commands executed after booting are all stored in the ROM. There's a boot process where gradually more and more information are loaded into memory.</p>
+
+<p>You can also see them in these solid state disks. Even if the system still treats them as rotating disk, but they're built of flash memories actually.</p>
+
+</br>
+
+## Bus
+
+</br>
+
+<p>Traditional Bus Structure connects CPU and memory. A bus is a collection of parallel wires that carry address, data, and control signales. Bus are typically shared by multiple devices.</p>
+
+<img width="1686" height="788" alt="QQ_1765471501585" src="https://github.com/user-attachments/assets/fa350a70-de32-489e-b508-6237309fe19e" />
+
+<p>Data flows across the wires back and forth from the CPU to memory. CPU consists of register files, and there's an arithmetic logic unit that reads and writes data from the register files and then manipulates that data in some way by doing some arithmetic operation or some logical operation.</p>
+
+<p>If instructions need to access memory (mov...), then that's handled by a bus interface which is connected to a what we called a system bus, then that's connected to an I/O bridge. This is another collection of chips(Intel call them chipset)</p>
 
 </br>
 
