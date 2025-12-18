@@ -284,7 +284,7 @@ int sum_array(int a[M][N])
 
 </br>
 
-# Memory Hierarchy
+# Caching
 
 </br>
 
@@ -296,29 +296,48 @@ int sum_array(int a[M][N])
 
 - Well-written programs tend to exhibit good locality
 
-<p>These fundamental properities complement each other beautifully</p>
+<p>These fundamental properities complement each other beautifully. They suggest an approach for organizing memory and storage system known as a memory hierarchy.</p>
 
-<p>They suggest an approach for organizing memory and storage system known as a memory hierarchy.</p>
+<p>You layer instead of a flat memory system.</p>
 
-</br>
+```
+Regs                       // CPU registers hold words retrieved from the L1 cache
+↓
+L1 cache                   // L1 cache holds cache lines retrieved from the L2 cache
+(SRAM)
+↓
+L2 cache                   // L2 cache holds cache lines retrieved from the L3 cache
+(SRAM)
+↓
+L3 cache                   // L3 cache holds cache lines retrieved from main memory
+(SRAM)
+↓
+Main memory                // Main memory holds disk blocks retrieved from local disks
+(DRAM)
+↓
+Local secondary storage
+(local disks)
+```
 
-# Caching
+<p>We put some so-called cache memories built out of SRAM. And they are on the order of megabytes in size.</p>
 
-</br>
+<p>This works all because of an idea of caching.</p>
+
+<p>Cache: A smaller, faster storage device that acts as a staging area for a subset of the data in a large, slower device.</p>
+
+<p>Why do memory hierarchy work? <b>Because of locality, programs tend to access the data at level k more often than they access the data at level k+1</b></p>
+
+<p>The memory hierarchy creats a large pool of storage that costs as much as the cheap storage near the bottom, but that serves data to programs at the rate of fast storage near the top. Memory hierarchy based on caching close the gap by exploiting locality.</p>
+
+<img width="1206" height="994" alt="QQ_1766038479147" src="https://github.com/user-attachments/assets/9467447d-4fc7-48e3-aef7-bc53319b2db1" />
+
+<p>In all kinds of most caches, there's some kinds of transfer unit. <b>We just take memory and partition into blocks where each block is in the same size, and then data will be transferred between memory and the cache in block size.</b></p>
+
+<p>There're two situations: cache hit and cache miss.</p>
+
+<p>One type of miss: Block i can only be placed in block i mod the cache size. If we have a cache that can hold four blocks, we take block i and we will stick it at block i mod 4. Due to the way we chose to map blocks, referencing blocks 0, 8, 0, 8, ... would miss every time</p>
 
 <p></p>
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
