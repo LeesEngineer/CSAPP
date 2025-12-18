@@ -64,7 +64,188 @@
 
 <p>Data flows across the wires back and forth from the CPU to memory. CPU consists of register files, and there's an arithmetic logic unit that reads and writes data from the register files and then manipulates that data in some way by doing some arithmetic operation or some logical operation.</p>
 
-<p>If instructions need to access memory (mov...), then that's handled by a bus interface which is connected to a what we called a system bus, then that's connected to an I/O bridge. This is another collection of chips(Intel call them chipset)</p>
+<p>If instructions need to access memory (mov...), then that's handled by a bus interface which is connected to a what we called a system bus, then that's connected to an I/O bridge. This is another collection of chips(Intel call them chipset). And then the I/O bridge is connected to another bus called the memory bus which connects the main memory. Okey, this is a kind of fairly simple abstraction for bus architectures.</p>
+
+</br>
+
+### Memory Read Transaction
+
+</br>
+
+<p>Suppose you do a load operation (We are loading data from memory into the CPU) like movq the eight byte address A into %rax.</p>
+
+<img width="1360" height="480" alt="QQ_1765865275665" src="https://github.com/user-attachments/assets/ca5abb81-a55a-4848-90b0-6c81dcd33f48" />
+
+- CPU places address A on the memory bus
+
+- Main memory reads A from the memory bus, retrieves word x, and place it on the bus (Those bits travel through the I/O bridge)
+
+- CPU reads word x from the bus and copies it into register %rax
+
+<p>Writing is similiar. <b>Store operation</b>: movq %rax, A</p>
+
+- CPU places address A on bus, Main memory reads it and waits for the corresponding data word to arrive
+
+- CPU places data word y on the bus
+
+- Main memory reads data word y from the bus and stores it at address A
+
+<p>Because the register file is very close to the ALU, those operations happen within approximately a few CPU cycles. There's a lot going on when you have to read and write memory: You have to do multiple operations on the bus and data has to travel propagate across the bus. All this stuff takes time. So memory operation reads and writes are costly. You know maybe 50 nanoseconds or 100 nanoseconds whereas operations that occur between registers are sub nanosecond.</p>
+
+
+</br>
+
+## Rotating Disks
+
+</br>
+
+<p>Another popular storage technology is rotating disks. There's series of platters. Each platter is coated with a magnetic material, and then bits ones and zeros are encoded in that magnetic material. Another component called arm is hinged here. It floats on a thin layer of air over the platter, and there's a read/write head at the very end that can sense the changes in the magnetic field that encode the bits.</p>
+
+<p>These platters are spinning around like counterclockwise, and arm can go back and forth. This is all mechanical. So the mechanical nature of a retating disk means it's going to be slower than DRAMs and SRAMs</p>
+
+<p>In a little more details: Disk Geometry</p>
+
+- Disks consist of platters, each with two surfaces
+
+- Each surface consists of concentric rings called tracks
+
+- Each track consists of sectors separated by gaps
+
+<img width="1364" height="758" alt="QQ_1765875577261" src="https://github.com/user-attachments/assets/91116ce7-47b6-42ef-b880-1ac73046e288" />
+
+<p>A little bit annoying</p>
+
+<hr>
+
+<p>Disk Access: </p>
+
+<img width="1662" height="552" alt="QQ_1765879066724" src="https://github.com/user-attachments/assets/d7df5e48-5cfa-4d3e-9a1c-c5117bcea8e2" />
+
+<p>Average time to access some target sector approximately by: </p>
+
+`Taccess = Tavg seek + Tavg rotation + Tavg transfer`
+
+- Seek time
+
+  - Time to position heads over cylinder containing target sector
+ 
+  - Typical Tavg seek is 3-9 ms
+ 
+- Rotational latency
+
+  - Time waiting for first bit of target sector to pass under r/w head
+ 
+  - Tavg rotation = 1/2 * 1/RMPs * 60sec/1min
+ 
+  - Typical Tavg rotation = 7200 RMPs
+ 
+- Transfer time
+
+  - Time to read the bits in the target sector
+ 
+  - Tavg transfer = 1/RMP * 1/(avg # sectors/track) * 60sec/1min
+
+<p>The time is dominated by the seek time, there's a fundamental mechanical limits that make it difficult to decrease the value.</p>
+
+<p>To get a double word, SRAM cost four nanoseconds, DRAM is about 60 nanoseconds, but disk is 40,000 times slower than SRAM.</p>
+
+</br>
+
+### Logical Disk Blocks
+
+</br>
+
+<p>Now modern disks present a much simpler view: </p>
+
+- Modern disks present a simpler abstract view of the complex sector geometry to CPU
+
+  - The set of available sectors is modeled as a sequence of b-sized logical blocks (0, 1, 2, ..., n)
+ 
+- Mapping between logical blocks and actual (physical) sectors
+
+  - Maintained by hardware/firmware device called disk controller
+ 
+  - Converts requests for logical blocks into (surface, track, sector) triples
+ 
+- Allows controller to set aside spare cylinders for each zone
+
+  - Accounts for the difference in "formatted capacity" and "maximumu capacity"
+
+<p>Disk controller takes some cylinders and reserve them as spare cylinders that aren't mapped to logical blocks. Then if sectors goes bad in a cylinder, the disk controller can copy data to a spare cylinder and just keep going. This is why your formatted capacity is less than maximum capacity. (Because some of those are reserved for failures)</p>
+
+<img width="1538" height="1086" alt="QQ_1765883171449" src="https://github.com/user-attachments/assets/3610af4f-cbcf-4922-a9d4-c5385cb8689a" />
+
+<p>Devices like disks are connected to the CPU and memory via a kind of bus called I/O bus. This's representative of what was called the PCI bus about five years ago. PCI bus is a broadcast bus meaning it's just a single set of wires. If I change any value on these wires, every device on that bus can see this value. It's the simplest kind of way to hook things together</p>
+
+<p>Modern system use a bus structure called PCI express. It's completely different. Devices are connected by a set of point-to-point connections. It's much faster. There's expension slots, you can put a network adapter or something else.</p>
+
+</br>
+
+### Reading a Disk Sector
+
+</br>
+
+- When we want to read a disk sector, CPU initiates a disk read by writing triple. It writes a command like read, a logical block number, and destination memory address to a port(address) associated with disk controller, because I want to place the contents of that logical block at a certain address in memory
+
+- Disk controller reads the sector and performs a direct memory access (DMA) transfer into main memory
+ 
+  - It takes control of the bus, and copies data across the I/O bus through the I/O bridge and directly to main memory without notifying the CPU
+
+<img width="672" height="748" alt="QQ_1765974012539" src="https://github.com/user-attachments/assets/c22277bd-1445-4027-bed0-50e59c9cebc9" />
+
+- WHen the DMA transfer completes, the disk controller notifies the CPU with an interrupt (i.e., asserts a special "interrupt" pin on the CPU)
+
+  - It actually asserts a pin on the CPU chip, and changes the value of the pin from 0 to 1. This trigger is an interrupt which notifies the CPU that sector has been copied
+ 
+<p>The reason they do this is because reading a disk is so god-awful slow. Within 10ms, CPU could execute millions of instructions. It will be a terrible waste if the CPU wait for the data to be read from disk.</p>
+
+<p>It issues the request to disk controller. While the slow laborious process is going on, CPU can execute other instruction</p>
+
+</br>
+
+## Solid State Disks (SSDs)
+
+</br>
+
+<p>There's another kind of disk called SSDs which is halfway between rotating disks and DRAM memories. From the CPU's perspective, SSDs looks exactly like a rotating disk, it has the same socket plug, the same physical interface and the same packaging. But it's built entirely out of flash memory.</p>
+
+<p>Inside the SSDs, there's a set of firmware called the flash translation layer which serve the purpose as the same purpose as the disk controller does in a rotating disk.</p>
+
+<img width="1468" height="662" alt="QQ_1765981812626" src="https://github.com/user-attachments/assets/aeb01761-6a80-423d-a077-61c0be444367" />
+
+<p>Data can be read and written from the flash memory <b>in units of pages</b>. Then a sequence of pages forms a block</p>
+
+- Pages: 512 KB to 4 KB, Blocks: 32 to 128 pages (Depending on the technology)
+
+- Data read/written in units of pages
+
+- Page can be written only after its block has been erased
+
+- A block wears out after about 100,000 repeated write
+
+<p>You can see write is a fairly complex operation. If you're writing a page, you have to copy all the other pages in its block, and you have to erase the whole</p>
+
+<p>Flash translation layer in modern system do all kinds of fancy proprietary algorithms to extend the life. They use caching and various tricks.</p>
+
+<hr>
+
+<b>SSD Performance Characteristics: </b>
+
+<img width="2122" height="246" alt="QQ_1766030064366" src="https://github.com/user-attachments/assets/b4bd422c-5533-40a7-9820-9166af90060e" />
+
+- Sequential access faster than random access
+
+  - This is Common theme in the memory hierarchy
+ 
+- Random writes are somewhat slower
+
+  - Erasing a block takes a long time (~1 ms)
+ 
+  - Modifying a block page requires all other pages to be copied to new block
+ 
+  - In earlier SSDs, the read/write gap was much larger. (Because of the improvements in flash translation layer)
+
+<img width="1998" height="1062" alt="QQ_1766031327793" src="https://github.com/user-attachments/assets/d0eaf356-710f-4ce2-8614-a0a50d6d949a" />
 
 </br>
 
@@ -72,7 +253,52 @@
 
 </br>
 
-<p></p>
+<p>The key to bridging this CPU-Memory gap is a fundamental property of computer programs known as locality</p>
+
+<p>Principle of locality: Programs tend to use data and instructions whose addresses near or equal to those they have used recently.</p>
+
+<p>I typically distinguish two different kinds of locality</p>
+
+- Temporal Locality: Recently referenced items are likely to be referenced again in the near future
+
+  - For example, suppose you're summing into a variable inside a loop, each loop iteration you're going to access that variable
+
+- Spatial locality: Items with nearby addresses tend to be referenced close together in time
+
+<hr>
+
+<p>Being able to look at code and get a qualitative sense of its locality is a key skill, what you want to do is avoiding the terrible locality in your code</p>
+
+```
+int sum_array(int a[M][N])
+{
+    int i, j, sum = 0;
+    for(j = 0; j < N; j ++)
+        for(i = 0; i < M; i ++)
+            sum += a[i][j];
+    return sum;
+}
+```
+
+<p>You should be offended when you see this, this is awful. If you write code which has a bad locality, it will run order magnitude slower.</p>
+
+</br>
+
+# Memory Hierarchy
+
+</br>
+
+<p>Three fundamental and enduring properties of hardware and software: </p>
+
+- Fast storage technologies cost more per byte
+
+- The gap between CPU and main memory speed is widening
+
+- Well-written programs tend to exhibit good locality
+
+<p>These fundamental properities complement each other beautifully</p>
+
+<p>They suggest an approach for organizing memory and storage system known as a memory hierarchy.</p>
 
 </br>
 
