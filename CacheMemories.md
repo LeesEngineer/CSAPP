@@ -12,16 +12,39 @@
 
 <p>Hardware logic has to know how to look for blocks in cache, and determine whether or not a perticular block is contained here. So cache memory has to be organized in a strict way.</p>
 
+<p>All cache memories are organized in the following way.</p>
 
+<img width="1404" height="1038" alt="QQ_1766066931479" src="https://github.com/user-attachments/assets/dbe6f282-1903-4622-a21b-bf5c25a4c34e" />
 
+<p>Each cache has S sets. There're E blocks per set and there're B bytes per block.</p>
 
+<p>A valid bit indicates whether the data bits and data blocks are actually meaningful. It's possible that they could just be random bits when you firstly turn on the machine.</p>
 
+<p>There's some additional bits called tag bits which help us search for blocks.</p>
 
+</br>
 
+# Cache Read
 
+</br>
 
+<p>When program executes an instruction that references some word in memory. CPU sends that address to the cache and asks the cache to return the word at that address</p>
 
+<img width="516" height="330" alt="QQ_1766073769056" src="https://github.com/user-attachments/assets/674c2eab-c8e7-4383-9b17-7d503d99cb73" />
 
+<p>This would be a 64-bit address in case of x86-64. It divides the address into a number of regions which are determined by the cache</p>
+
+<p>There are b low order bits which determine the offset in the block that word starts at. The next s bits are treated as an unsigned integer which serves as an index into the array of sets. And then all of the remaining t bits constitude what we call tag which will help us when we do search</p>
+
+<p>The cache logic takes this address, and it first extracts the set index to identify the set. If the block that contains the data word at this address is in the cache. It's going to be in the array donoted by the set index.</p>
+
+- Locate set
+
+- Check if any line in set has matching tag
+
+- Yes + line valid: hit
+
+<p></p>
 
 
 
