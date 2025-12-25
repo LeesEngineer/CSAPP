@@ -208,7 +208,7 @@ linux> ./prog
 
 <p>Then that's followed by the .data section which contains space for all of your initialized global variables.</p>
 
-<p>Then there's a section called .bss which defines the uninitialized global variables. It doesn't actually take up any space and it only records the size, because they're uninitialized droids. <b>But there are entries in the symbol table for them.</b> And when this program gets loaded these variables are going to need, they have to have space allocated for them.</p>
+<p>Then there's a section called .bss which defines the uninitialized global variables. It doesn't actually take up any space and it only records the size, because they're uninitialized droids. <b>But there are entries in the symbol table for them.</b> And <b>when this program gets loaded these variables are going to need, they have to have space allocated for them.</b></p>
 
 <p>So if you have a separate section for the uninitialized variable, they don't have to consume any room in the .o file.</p>
 
