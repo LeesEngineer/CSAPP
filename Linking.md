@@ -1,5 +1,3 @@
-<img width="1620" height="1118" alt="QQ_1766736629092" src="https://github.com/user-attachments/assets/504e4542-e683-4fba-8ae3-5d20c17ce7b8" /></br>
-
 # Linking
 
 </br>
@@ -950,6 +948,22 @@ void *malloc(size_t size)
     printf("malloc(%d) = %p\n", (int)size, ptr);
     return ptr;
 }
+void free(void *ptr)
+{
+    void (*freep)(void *) = NULL;
+    char *error;
+    if(!ptr) return;
+
+    freep = dlsym(RTLD_NEXT, "free");
+    if((error = dlerror()) != NULL)
+    {
+        fputs(error, stderr);
+        exit(1);
+    }
+    freep(ptr);
+    printf("free(%p)\n", ptr);
+}
+#endif
 ```
 
 <p>You can also do interpositioning at run-time. So you don't even need access to the .o files <b>all you need is access to the executable.</b> And for every program we have access to the executable. <b>So think about we can take any program.</b> We can interpose on its library calls at runtime.</p>
@@ -960,11 +974,25 @@ void *malloc(size_t size)
 
 ```
 linux> make intr
-gcc -Wall -DRUNTIME
+gcc -Wall -DRUNTIME -shared -fpic -o mymalloc.so mymalloc.c -ldl
+gcc -Wall -o intr int.c
+linux> make runr
+(LD_PRELOAD="./mymalloc.so" ./intr)
+malloc(32) = 0xe60010
+free(0xe60010)
+linux>
 ```
 
+<p>The LD_PRELOAD environment variable tells the dynamic linker to resolve unresolved refs (e.g., to malloc) by looking in mymalloc.so first.</p>
 
-
+```
+// Static link
+gcc -static -o app main.c -L. -lmine
+// Link-time link
+gcc -o app main.o -L. -lmine
+// Run-time link
+gcc -o app main.c -ldl
+```
 
 
 
