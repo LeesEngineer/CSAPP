@@ -238,15 +238,37 @@ main()
 
 <img width="1008" height="586" alt="QQ_1767337351038" src="https://github.com/user-attachments/assets/6b36e3ee-1dd5-4d4b-84d2-87f7565cb873" />
 
-<p>Computer runs many processes simultaneously.(Even on a system with a single core) </p>
+<p>Computer runs many processes simultaneously.(Even on a system with a single core). Process executions are interleaved.</p>
 
+<hr>
 
+<p>Suppose program is running on a single core system. At some point an exception occurs either because of a timer interrupt or a fault of some kind or a trap, <b>the operating system will gets control.</b> It will dicide which process to run.</p>
 
+<img width="1060" height="774" alt="QQ_1767337974273" src="https://github.com/user-attachments/assets/ceee4acb-6dde-44c7-a742-7ed888facef9" />
 
+- Save current registers in memory
 
+- Schedule next process for execution
 
+- Load saved registers and switch address space(context)
 
+<p>But now operating system will schedule processes on those multiple cores. If there's not enough cores then it will do the context switch.</p>
 
+</br>
+
+### Concurrent Processes
+
+</br>
+
+<p>Each process is a logical control flow. Two processes run concurrently if their flows overlap in time, otherwise they are sequential. Control flows for concurrent processes are disjoint, but we can think of concurrent processes as running parallel.</p>
+
+<p>Processes are managed by a shared chunk of memory-resident OS code called the kernel. <b>The kernel is not a separate process, but rather runs as part of some existing processes.</b> It's just code that's in the upper portion of the address space. <b>Kernel gets executed as a result of an exception.</b></p>
+
+<p>Control flow passes from one process to another via a context switch.</p>
+
+<img width="1220" height="612" alt="QQ_1767341354025" src="https://github.com/user-attachments/assets/d7874710-c82c-4de6-8639-70fa7cb6c3f2" />
+
+<p>You have this process A that's runs, and then an exception occurs which transfers control to the kernel. Kernel invokes its scheduler which decides whether to let A continue to run or to do a context switch and run a new process.</p>
 
 </br>
 
@@ -254,15 +276,298 @@ main()
 
 </br>
 
-<p></p>
+<p>Linux provides a number of functions that you can call to manipulate processes that we refer to as process control.</p>
 
+<p>On error, Linux system-level functions typically return -1 and set global variable srrno to indicate cause.</p>
 
+<p><b>Hard and fast rule: </b>You must check the return status of every system-level function. Only exception is the handful of functions that return void.</p>
 
+```
+if((pid = fork()) < 0)
+{
+    fprintf(stderr, "fork error: %d\n", strerror(errno));
+    exit(0);
+}
+```
 
+<p>You can also make a error-handling wrappers</p>
 
+<hr>
 
+<p>Obtain PID: </p>
 
+- pid_t getpid(void)
 
+  - Returns PID of current process
+ 
+- pid_t getppid(void)
+
+  - Returns PID of parent process
+
+</br>
+
+### Creating and Terminating Processes
+
+</br>
+
+<p>From a programmer's perspective, we can think of a process as being in one of three states</p>
+
+- Running: Process is either executing, or waiting to be executed and will eventually be scheduled by the kernel
+
+- Stopped: Process execution is suspended and will not be scheduled until further notice
+
+- Terminated: Process is stopped permanently
+
+<p>Process can be terminated by three reasons: </p>
+
+- Receiving a signal whose default action is to terminate
+
+- Returning from the main routine
+
+- Calling the exit function
+
+<p>`exit` is called once but never returns. `void exit(iont status)` terminates with an exit status. . Another way to explicitly set the exit status is to return an integer value from the main routine.</p>
+
+<p>Convention: normal return status is 0, nonzero on error.</p>
+
+<hr>
+
+<p>Parent process creates a new running process by calling fork. `int fork(void)`</p>
+
+- Returns 0 to the child process, child's PID to parent process
+
+- Child is almost identical to parent
+
+  - Child gets an identical <b>(but separate)</b> copy of the parent's virtual address space
+ 
+  - Child gets identical copies of the parent's open file descriptors
+ 
+  - Child has a different PID than the parent
+ 
+<p>`fork` is called once but returns twice. Your code looks like this: </p>
+
+```
+pid_t pid = fork();
+```
+
+<p>This line of code was executed only once. But the program was "copied". Both the parent and child processes will continue execution from the point after fork().</p>
+
+```
+int main()
+{
+    pid_t pid;
+    int x = 1;
+
+    if((pid = fork()) < 0)
+    {
+        fprintf(stderr, "fork error: %d\n", strerror(errno));
+        exit(0);
+    }
+    if(pid == 0)
+    {
+        printf("child : x=%d\n", ++x);
+        exit(0);
+    }
+    
+    printf("parent : x=%d\n", --x);
+    exit(0);
+}
+```
+
+- Can't predict execution order of parent and child
+
+- Duplicate but separate address space
+
+- <b>Shared open files</b>: stdout is the same to both parent and child
+
+</br>
+
+### Modeling fork with Process Graphs
+
+</br>
+
+<p>Forks can be kind of complex, especially if they're nested or you call them multiple times. Because we can't make any assumption about the ordering.</p>
+
+<p>But a process graph is a useful tool for capturing the partial ordering of statements in a concurrent program: <b>Any topological sort of the graph corresponds to a feasible total ordering.</b></p>
+
+<img width="1540" height="712" alt="QQ_1767426763111" src="https://github.com/user-attachments/assets/aae7f5bb-bf64-49ab-ae68-427f817ba71f" />
+
+<p>Two consecutive forks:</p>
+
+```
+void fork2()
+{
+    printf("L0\n");
+    fork();
+    printf("L1\n");
+    fork();
+    printf("Bye\n");
+}
+```
+
+<img width="834" height="614" alt="QQ_1767426956494" src="https://github.com/user-attachments/assets/fd5bb3e5-0307-44ce-882c-eecee87056c4" />
+
+<p>Nested forks:</p>
+
+```
+void fork4()
+{
+    printf("L0\n");
+    if(fork() != 0)
+    {
+        printf("L1\n");
+        if(fork() != 0)
+        {
+            printf("L2\n");
+        }
+    }
+    printf("Bye\n");
+}
+```
+
+<img width="848" height="292" alt="QQ_1767427195577" src="https://github.com/user-attachments/assets/56bd9e14-9c13-464c-986b-cf9e6b0c42f1" />
+
+</br>
+
+### Reaping Child Processes
+
+</br>
+
+- When process terminates, it still consumes system resources
+
+  - Examples: Exit status, various OS tables
+ 
+- Called a "zombie"
+
+  - Living corpse, half alive and half dead
+ 
+<p>The reason it does this is that <b>the parent may want to know about the exit status of the child.</b> The system leaves it but doesn't remove it entirely. System keeps a little bit of <b>status associated with child in a form of the exit status or a OS table</b>. </p>
+
+<b>Reaping: </b>
+
+- Performed by parent on terminated child (using wait or waitpid)
+
+- Parent is given exit status information
+
+- Kernel then deletes zombie child process
+
+<p>What if parent doesn't reap: </p>
+
+- If any parent terminates without reaping a child, then the orphaned child will be reaped by <b>init</b> process (pid == 1)
+
+- So, only need explicit reaping in long-running processes
+
+  - e.g., shells and servers
+ 
+<p>It's actually a form of memory leak.</p>
+
+```
+// forks.c
+void fork7()
+{
+    if(fork() == 0)
+    {
+        printf("Terminating Child, PID = %d\n", getpid());
+        exit(0);
+    }
+    else
+    {
+        printf("Running Parent, PID = %d\n", getpid());
+        while(1)
+            ;
+    }
+}
+```
+
+<p>This is a parent that never reaps the child that it created</p>
+
+```
+linux> ./forks 7 &
+[1] 6639
+Running Parent, PID = 6639
+Terminating Child, PID = 6640
+linux> ps
+  PID TTY          TIME CMD
+ 6585 ttyp9    00:00:00 tcsh
+ 6639 ttyp9    00:00:03 forks
+ 6640 ttyp9    00:00:00 forks <defunct>
+ 6641 ttyp9    00:00:00 ps
+linux> kill 6639
+[1]    Terminated
+linux> ps
+  PID TTY          TIME CMD
+ 6585 ttyp9    00:00:00 tcsh
+ 6642 ttyp9    00:00:00 ps
+```
+
+<p>`defunct` indicates that it's a zombie</p>
+
+<p>Now what happens if the child doesn't terminate.</p>
+
+```
+// forks.c
+void fork8()
+{
+    if(fork() == 0)
+    {
+        printf("Running Child, PID = %d\n", getpid());
+        while(1)
+            ;
+    }
+    else
+    {
+        printf("Terminating Parent, PID = %d\n", getpid());
+        exit(0);
+    }
+}
+```
+
+```
+linux> ./forks 8
+Terminating Parent, PID = 6675
+Running Child, PID = 6676
+linux> ps
+  PID TTY          TIME CMD
+ 6585 ttyp9    00:00:00 tcsh
+ 6676 ttyp9    00:00:06 forks
+ 6677 ttyp9    00:00:00 ps
+linux> kill 6676
+linux> ps
+  PID TTY          TIME CMD
+ 6585 ttyp9    00:00:00 tcsh
+ 6678 ttyp9    00:00:00 ps
+```
+
+<p>Child still active. Must kill child explicitly, or else will keep running indefinitely</p>
+
+</br>
+
+#### wait: Synchronizing with Children
+
+</br>
+
+<p><b>Parent reaps a child by calling the wait function.</b></p>
+
+<p>int wait(int *child_status)</p>
+
+- Suspends current process until one of its children terminates
+
+- Return value is the pid of the child process that terminated
+
+- If child_status != NULL, then the integer it points to will be set to a value that indicates reason the child terminated and the exit status:
+
+  - Checked using macros defined in wait.h: WIFEXITED, WEXITSTATUS, WIFSIGNALED, WTERMSIG, WIFSTOPPED, WSTOPSIG, WIFCONTINUED
+ 
+```
+void fork9()
+{
+    int child_status;
+    if(fork() == 0)
+    {
+        
+    }
+}
+```
 
 
 
