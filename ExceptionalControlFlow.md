@@ -562,13 +562,55 @@ linux> ps
 void fork9()
 {
     int child_status;
+
     if(fork() == 0)
     {
-        
+        printf("HC: hello from child\n");
+        exit(0);
+    }
+    else
+    {
+        printf("HP: hello from parent\n");
+        wait(&child_status);
+        printf("CT: child has terminated\n");
+    }
+    printf("Bye\n");
+}
+```
+
+<img width="542" height="370" alt="QQ_1767451910744" src="https://github.com/user-attachments/assets/c117e9f3-bad0-4e5e-92a2-4b8bba6df988" />
+
+<p>If multiple children completed, it will take in arbitrary order. We can use macros <b>WIFEXITED</b> and <b>WEXITSTATUS</b> to get information about exit status.</p>
+
+```
+void fork10()
+{
+    pid_t pid[N];
+    int i, child_status;
+
+    for(i = 0; i < N; i ++)
+    {
+        if((pid[i] = fork) == 0)
+        {
+            exit(100+i);
+        }
+    for(i = 0; i < N; i ++)
+    {
+        pid_t wpid = wait(&child_status);
+        if(WIFEXITED(child_status))
+            printf("Child %d terminated with exit status %d\n", wpid, WEXITSTATUS(child_status));
+        else
+            printf("Child %d terminates abnormally\n", wpid);
+    }
     }
 }
 ```
 
+</br>
+
+#### wait: Synchronizing with Children
+
+</br>
 
 
 
