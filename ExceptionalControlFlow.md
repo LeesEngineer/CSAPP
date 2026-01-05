@@ -589,11 +589,11 @@ void fork10()
     int i, child_status;
 
     for(i = 0; i < N; i ++)
-    {
-        if((pid[i] = fork) == 0)
+        if((pid[i] = fork()) == 0)
         {
             exit(100+i);
         }
+
     for(i = 0; i < N; i ++)
     {
         pid_t wpid = wait(&child_status);
@@ -602,30 +602,111 @@ void fork10()
         else
             printf("Child %d terminates abnormally\n", wpid);
     }
+    
+}
+```
+
+<p>If WIFEXITED is false, it means that the child terminated for some other reason rather than exit</p>
+
+</br>
+
+#### waitpid
+
+</br>
+
+<p>pid_t waitpid(pid_t pid, int *status, int options)</p>
+
+<p>Option: </p>
+
+- 0: Default Blocks. and waits until the specified child process terminates (exit or is killed by a signal).
+
+- WNOHANG: Non-blocking. If the child process has not yet terminated, then returns immediately to 0
+
+- Various options (see textbook)
+
+```
+void fork11()
+{
+    pid_t pid[N];
+    int i;
+    int child_status;
+
+    for(i = 0; i < N; i ++)
+        if((pid[i] = fork()) == 0)
+            exit(100 + i);
+
+    for(i = N - 1; i >= 0; i --)
+    {
+        pid_t wpid = waitpid(pid[i], &child_status, 0);
+        if(WIFEXITED(child_status))
+            printf("Child %d terminated with exit status %d\n", wpid, WEXITSTATUS(child_status));
+        else
+            printf("Child %d terminates abnormally\n", wpid);
     }
 }
 ```
 
 </br>
 
-#### wait: Synchronizing with Children
+### execve: Loading and Running Programs
 
 </br>
 
+<p><b>int execve(char *filename, char *argv[], char *envp[])</b></p>
 
+<p>Loads and runs in the current process: </p>
 
+- Executable file `filename`
 
+  - Can be object file or script file beginning with `#!interpreter` (e.g., #!/bin/bash)
 
+- Argument list `argv`
 
+  - By convention argv[0] == filename
 
+- Environment variable list `envp`
 
+  - "name=value" strings (e.g., USER=droh)
+ 
+  - getenv, putenv, printenv
+ 
+- Completely overwrites virtual address space including code, data and stack
 
+  - Retains PID, open files and signal context
+ 
+- Called once and never returns <b>(except if there is an error)</b>
 
+```
+if (fork() == 0) {
+    execve("/bin/ls", argv, envp);
+    perror("execve");
+    exit(1);
+}
+```
+ 
+<p>If you want to write a shell script, the first line starts with a #! and then the path of some interpreter. That will execute bash, and then bash will read in the lines following and interpret them just like through you'd type them at the command line. As following: </p>
 
+```
+execve("/bin/bash",
+       ["bash", "test.sh"],
+       envp);
+```
 
+<p>Let's look at the <b>Structure of the stack when a new program starts</b>.</p>
 
+<p>`execve` loads in new code and data, and creates a new stack frame. The stack frame that it creates has following.</p>
 
+<img width="970" height="1126" alt="QQ_1767538704166" src="https://github.com/user-attachments/assets/6d6fb64c-a5cf-4827-b210-f3fcccf79119" />
 
+<b>argv in %rsi. argc in %rdi.</b>
+
+<p>Here is the situation right before the startup code calls main. The first function that executes is the `libc_start_main`. It has a stack frame. The future stack frame will be here at the top of stack.</p>
+
+<p>There's some padding and then the argument list in argv is contained on the stack. So the argv is a list of pointers terminated by a null. Each one of these pointers points to an string that corresponds to an argument of the program you specified to run.</p>
+
+<p>Environment list is also contained on the stack. His situation is the same as the above.</p>
+
+<p></p>
 
 
 
