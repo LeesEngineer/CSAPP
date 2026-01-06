@@ -706,13 +706,36 @@ execve("/bin/bash",
 
 <p>Environment list is also contained on the stack. His situation is the same as the above.</p>
 
+<hr>
+
+<p>execv Example: </p>
+
+<p>We want to execute `/bin/ls -lt /usr/include` in child process using current environment: </p>
+
+<img width="1326" height="534" alt="QQ_1767707939874" src="https://github.com/user-attachments/assets/4c9cea02-fae4-4d42-b8b4-8b37533ba70d" />
+
+```
+if((pid = fork()) == 0)
+{
+    if(execv(myargv[0], myargv, environ) < 0)
+    {
+        printf("%s: Command not found.\n", myargv[0]);
+        exit(1);
+    }
+}
+```
+
+<p>The program we want to execute is always contained in the first element of argv.</p>
+
+</br>
+
+# Signals and Nonlocal Jumps
+
+</br>
+
+<p>Continue our study of ECF by looking at some higher level mechanisms known as Linux signals and C nonlocal jumps.</p>
+
 <p></p>
-
-
-
-
-
-
 
 
 
