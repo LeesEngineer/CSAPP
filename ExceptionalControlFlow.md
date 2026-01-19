@@ -735,6 +735,78 @@ if((pid = fork()) == 0)
 
 <p>Continue our study of ECF by looking at some higher level mechanisms known as Linux signals and C nonlocal jumps.</p>
 
+</br>
+
+## Signals
+
+</br>
+
+<p>There's one way to create process on Linux, that's using a fork call. But in fact all of the processes on the system actually form a hierarchy. And the very first process created when you boot the system up is the init process.</p>
+
+<img width="1430" height="974" alt="QQ_1768644592242" src="https://github.com/user-attachments/assets/f94649b3-db4e-4de5-aaca-98ff7e624c4d" />
+
+<p>All other processes are descendants of init process. When init process starts up it creates deamons which are long-running programs that provide services. Then it creates a so called login shells process which provide the command-line interface.</p>
+
+```
+int main()
+{
+    char cmdline[MAXLINE];
+
+    while(1)
+    {
+        printf("> ");
+        Fgets(cmdline, MAXLINE, stdin);
+
+        if(feof(stdin))
+            exit(0);
+
+        eval(cmdline);
+    }
+}
+
+void eval(char *cmdline)
+{
+    char *argv[MAXARGS];
+    char buf[MAXLINE];
+    int bg;
+    pid_t pid;
+
+    strcpy(buf, cmdline);
+    bg = parseline(buf, argv);
+    if(argv[0] == NULL)
+        return;
+
+    if(!builtin_command(argv))
+    {
+        if((pid = fork()) == 0)
+        {
+            if(execve(argv[0], argv, environ) < 0)
+            {
+                printf("%s: Command not found.\n", argv[0]);
+                exit(0);
+            }
+        }
+
+        // Whether to wait
+        if(!bg)
+        {
+            int status;
+            if(waitpid(pid, &status, 0) < 0)
+                unix_error("waitfg: waitpid error");
+        }
+        else
+            printf("%d %s", pid, cmdline);
+    }
+    return;
+}
+```
+
+</br>
+
+## Nonlocal jumps
+
+</br>
+
 <p></p>
 
 
