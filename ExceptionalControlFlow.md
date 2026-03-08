@@ -747,6 +747,8 @@ if((pid = fork()) == 0)
 
 <p>All other processes are descendants of init process. When init process starts up it creates deamons which are long-running programs that provide services. Then it creates a so called login shells process which provide the command-line interface.</p>
 
+<p>You can use '&' to indicate that this command will run in the background.</p>
+
 ```
 int main()
 {
@@ -800,6 +802,10 @@ void eval(char *cmdline)
     return;
 }
 ```
+
+<p>If we have enough of those backstage jobs we create a memory leak that could crash the system.</p>
+
+<p>ECF to the rescue: The kernal will interrupt regular processing to alert us when a background process completes.</p>
 
 </br>
 
