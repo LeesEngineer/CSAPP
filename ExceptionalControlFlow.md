@@ -805,7 +805,83 @@ void eval(char *cmdline)
 
 <p>If we have enough of those backstage jobs we create a memory leak that could crash the system.</p>
 
-<p>ECF to the rescue: The kernal will interrupt regular processing to alert us when a background process completes.</p>
+<p>ECF to the rescue: The kernal will interrupt regular processing to alert us when a background process completes. In UNIX, the alert mechanism is called a signal.</p>
+
+<p>A signal is a small message that notifies a process that an event of some type has occurred. It's sent from the kernel (sometimes at the request of another process) to a process. Signal type is identified by a small integer ID's (1-30).</p>
+
+<img width="1482" height="402" alt="QQ_1773069724478" src="https://github.com/user-attachments/assets/146532e9-9253-42ee-9f86-61eb00f5be21" />
+
+</br>
+
+### Sending a Signal
+
+</br>
+
+<p>Kernel sends a signal to a destination process by updating some state in the context of the destination process. Nothing happens except some bits change in the context.</p>
+
+<P>Kernel sends a signal for one of the following reasons:</P>
+
+- Kernel has detected a system event such as divide-by-zero (SIGPE) or the termination of a child process (SIGCHLD)
+
+- Another process has invoked the kill system call to explicitly request the kernel to send a signal to the destination process
+
+</br>
+
+### Receiving a Signal
+
+</br>
+
+<p>A destination process receives a signal when it is forced by the kernel to react in some way to the delivery of the signal.</p>
+
+- Ignore the signal
+
+- Terminate the process (with optional core dump)
+
+- Catch the signal by executing a <b>user-level</b> function called signal handler
+
+</br>
+
+### Pending and Blocked Signals
+
+</br>
+
+<p>A signal is pending if sent but not yet received</p>
+
+- There can be at most one pending signal of any particular type
+
+- Signals are not queued
+
+<p>A process can block the receipt of certain signals, Blocked signals can be delivered, but will not be received.</p>
+
+</br>
+
+### Pending/Blocked Bits
+
+</br>
+
+<p>Kernel maintains pending and blocked bit vectors in the context of each process</p>
+
+- Pending: represents the set of pending signals
+
+  - Kernel sets bit k in pending when a signal of type k is delivered
+ 
+  - Kernel clears bit k in pending when a signal of type k is received
+ 
+- Blocked: represents the set of blocked signals
+
+  - Can be set and cleared by using the sigprocmask function
+ 
+</br>
+
+### Process Group
+
+</br>
+
+<p>Every process belongs to exactly one process group.</p>
+
+<img width="1416" height="830" alt="QQ_1773070766108" src="https://github.com/user-attachments/assets/6a5dbbc2-c960-4d9a-878d-0feca150edc5" />
+
+<p>We also have getpgrp() and setpgid().</p>
 
 </br>
 
