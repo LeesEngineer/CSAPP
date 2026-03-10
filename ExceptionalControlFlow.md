@@ -885,6 +885,26 @@ void eval(char *cmdline)
 
 </br>
 
+### Sending Signals with /bin/kill
+
+</br>
+
+<p>You can send arbitrary signals with /bin/kill program to a process or a process group. </p>
+
+- /bin/kill -9 24818: Send SIGKILL to process 24818
+
+- /bin/kill -9 -24817: Send SIGKILL to every process in process group 24817
+
+</br>
+
+### Sending Signals from the Keyboard
+
+</br>
+
+<p>Typing ctrl-c (ctrl-z) causes the kernel to send a SIGINT (SIGTSTP : default action is to stop or suspend each process, <b>until it receives a sigcont signal</b>) to every job in the foreground process group.</p>
+
+</br>
+
 ## Nonlocal jumps
 
 </br>
