@@ -905,6 +905,177 @@ void eval(char *cmdline)
 
 </br>
 
+### Receiving Signals
+
+</br>
+
+<p>Suppose kernel is returning from an exception handler and is ready to pass control to process p</p>
+
+<p>Kernel computes <b>pnb = pending & ~blocked</b>. If pnb is equeal to zero, pass control to next instruction in the logical flow for p, else:</p>
+
+- Choose least nonzero bit k in pnb and force process p to receive signal k
+
+- The receipt of the signal triggers some action by p
+
+- Repeat for all nonzero k in pnb
+
+- Pass control to next instruction in logical flow for p
+
+<p>Each signal type has a predefined default action:</p>
+
+- The process terminates
+
+- The process terminates and dump
+
+- The process stops until restarted by a SIGCONT signal
+
+- The process ingores the signal
+
+<p>The signal function modifies the default action associated with the receipt of signal signum 'handler_t *signal(int signum, handler_t *handler)' </p>
+
+<p>Different values for handler: </p>
+
+- SIG_IGN: ignore signals of type signum
+
+- SIG_DFL: revert to the default action on receipt of signals of type signum
+
+- Handler is the address of a user-level signal handler. It has a argument which will be set to the signal number
+
+  - Called when process receives signal of type signum
+ 
+  - Referred to as "installing the handler"
+ 
+  - When the handler executes its return statement, control passed to instruction in the control flow of the process
+
+<p>Signals are another form of concurrency. A signal handler is a separate logical flow (<b>not process</b>) that runs concurrently with the main program.</p>
+
+<img width="1178" height="602" alt="QQ_1773134184787" src="https://github.com/user-attachments/assets/303d4ede-4268-413a-8bd8-38f06a8c8e2e" />
+
+<p>From a code perspective, a signal handler looks just like a regular function call. We say they are concurrent because their triggering timing is unpredictable, they can interrupt the current execution flow at any time when program executes. It's a fundamental difference.</p>
+
+<p><b>Handlers can be interrupted by other handlers</b></p>
+
+<hr>
+
+- Implicit blocking mechanism
+
+  - Kernel blocks any pending signals of type currently being handled
+ 
+  - E.g., A SIGINT handler can't be interrupted by another SIGINT
+ 
+- Explicit blocking and unblocking mechanism
+
+  - sigprocmask function
+ 
+  - sigemptyset
+ 
+  - sigfillset
+ 
+  - sigaddset
+ 
+  - sigdelset
+
+```
+sigset_t mask, prev_mask;
+
+sigemptyset(&mask);
+sigaddset(&mask, SIGINT);
+
+sigprocmask(SIG_BLOCK, &mask, &prev_mask);
+// Code region that won't be interrupted by SIGINT
+sigprocmask(SIG_BLOCK, &prev_mask, NULL);
+```
+
+<p>We want to temporarily block the receipt of sigint.</p>
+
+</br>
+
+### Safe Signal Handling
+
+</br>
+
+<p>Handlers are tricky because they are <b>concurrent</b> with main program and <b>share the same global data structures</b>. </p>
+
+<p><b>Another aspect is that signals aren't queued.</b> It's very easy to use the receipt of signals to count events if you are not careful about it.</p>
+
+<p>Here are some guidelines:</p>
+
+- G0: Keep your handlers as simple as possible
+
+  - e.g., Set a global flag and return
+ 
+- G1: Call only async-signal-safe functions in your handlers
+
+  - printf, sprintf, malloc, and exit are <b>not safe</b>
+
+- G2: save and restore errno on entry and exit
+
+  - So that other handlers don't overwrite your value of errno
+ 
+- G3: Protect accesses to shared data structures by temporarily blocking all signals
+
+  - To prevent possible corruption
+ 
+- G4: Declare global variable as volatile
+
+  - To prevent compiler from storing them in a register, then you may miss that variable being updated
+ 
+<p>If you declare a global variable as volatile, it will always be read and written through memory. Assume that you have a program:</p>
+
+```
+int flag = 0;
+
+void handler(int sig) {
+    flag = 1;
+}
+
+int main() {
+    signal(SIGINT, handler);
+
+    while (flag == 0) {
+        ;   // 等待信号
+    }
+
+    printf("signal received\n");
+}
+```
+
+<p>Compiler may optimize it like this:</p>
+
+```
+int flag = 0;
+
+int main() {
+    int tmp = flag;
+
+    while (tmp == 0) {
+        ;
+    }
+}
+```
+
+<p>It <b>stores flag in a register</b> through a temporary variable. Because compiler thinks that flag doesn't change.</p>
+
+- G5: Declare global flags as `volatile sig_atomic flag;`. sig_atomic is a int 
+
+  - flag: variable that is only read or written (e.g., flag = 1, not flag ++ or flag = flag + 10)
+ 
+  - Because flag can't be interrupted, it doesn't need to be protected (like blocking)
+ 
+</br>
+
+### Async-Signal-Safety
+
+</br>
+
+<p>Function is async-signal-safe if either reentrant or non-interruptible by signals</p>
+
+<p>Reentrant: All variables stored on stack frame, no glocal variables, no pointers to global variables. <b>You can have multiple instancesof that function</b></p>
+
+<P>POSIX guarantees 117 functions to be async-signal-safe. Unfortunately `write` is the only async-signal-safe output function.</P>
+
+</br>
+
 ## Nonlocal jumps
 
 </br>
