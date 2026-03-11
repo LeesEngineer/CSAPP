@@ -851,7 +851,7 @@ void eval(char *cmdline)
 
 - Signals are not queued
 
-<p>A process can block the receipt of certain signals, Blocked signals can be delivered, but will not be received.</p>
+<p>A process can block the receipt of certain signals. <b>Blocked signals can be delivered, but will not be received which means that pending bit will be set and the signal is waiting to be handled.</b></p>
 
 </br>
 
@@ -870,6 +870,8 @@ void eval(char *cmdline)
 - Blocked: represents the set of blocked signals
 
   - Can be set and cleared by using the sigprocmask function
+ 
+<p><b>The kernel has already cleared the pending bits before the signal handler begins execution.</b></p>
  
 </br>
 
