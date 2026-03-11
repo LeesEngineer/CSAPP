@@ -1072,7 +1072,9 @@ int main() {
 
 <p>Reentrant: All variables stored on stack frame, no glocal variables, no pointers to global variables. <b>You can have multiple instancesof that function</b></p>
 
-<P>POSIX guarantees 117 functions to be async-signal-safe. Unfortunately `write` is the only async-signal-safe output function.</P>
+<P>POSIX guarantees 117 functions to be async-signal-safe. Unfortunately `write` is the only async-signal-safe output function. `printf`, `sprintf`, `malloc`, `exit` are not on the list.</P>
+
+<p>It's possible to write a program that does a tight loop of printouts in that mian routine. The printf has to acquire what's called a lock on the terminal. It acquires a lock means that only one instance of printf can write to the terminal at a pointe in time. If another function tries to acquire that lock it has to wait until whatever function owns the lock releases it. Lock is way to get mutually exclusive access to shared resources.</p>
 
 </br>
 
