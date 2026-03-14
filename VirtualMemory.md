@@ -4,23 +4,68 @@
 
 </br>
 
+<p>Virtualization is a very important concept. When you virtualize a resource, you present the user with some different kind of view or abstraction of that resource. And you do it by interposing or intercepting on accesses to that resource. We saw this when we created wrapper function for malloc when we use <b>interpositioning</b>. Once you've intercepted a access, you can deal with it in any way.</p>
+
+<p>It's useful to virtualize memory. And these requests are intercepted by MMU.</p>
+
+- Virtual address space: Set of N = 2^n virtual addresses
+
+- Physical address space: Set of N = 2^n physical addresses. It corresponds to the amount DRAM.
+
+<p>Virtual address space is much larger than the physical address space. The virtual address space is the same for all process running on the system.</p>
+
+<p>So why VM.</p>
+
+- Uses main memory efficiently
+
+  - Use DRAM <b>as a cache for parts of a virtual address space</b> (not a Disk)
+ 
+- Simplifies memory management
+
+  - Each process gets the same uniform linear address space
+ 
+- Isolates address spaces
+
+  - One process can't interfere with another's memory
+ 
+  - User code can't access privileged kernel.
+
+</br>
+
+# VM as tool for cacheing
+
+</br>
+
+<p>Conceptually, virtual memory is an array of N contiguous bytes stored on disk. And they are cached in physical memory.</p>
+
+
+
+
+
+
+
+</br>
+
+# VM as tool for memory management
+
+</br>
+
 <p></p>
 
+</br>
 
+# VM as tool for protection
 
+</br>
 
+<p></p>
 
+</br>
 
+# Address translation
+</br>
 
-
-
-
-
-
-
-
-
-
+<p></p>
 
 
 
