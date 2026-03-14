@@ -1076,7 +1076,112 @@ int main() {
 
 <P>POSIX guarantees 117 functions to be async-signal-safe. Unfortunately `write` is the only async-signal-safe output function. `printf`, `sprintf`, `malloc`, `exit` are not on the list.</P>
 
+<p>Popular functions on the list: _exit, write, wait, waitpid, sleep, kill. `printf`, sprintf, malloc, exit are not on the list.</p>
+
 <p>It's possible to write a program that does a tight loop of printouts in that mian routine. The printf has to acquire what's called a lock on the terminal. It acquires a lock means that only one instance of printf can write to the terminal at a pointe in time. If another function tries to acquire that lock it has to wait until whatever function owns the lock releases it. Lock is way to get mutually exclusive access to shared resources.</p>
+
+<p>Thinking we have a tight loop with executing printf, one of the printfs acquires a lock on the terminal. If the program gets interrupted by the receipt of a signal and within the signal handler it calls another printf. <b>The printf tries to acquire that lock and it blocks forever</b> because the lock won't be released. This is what we called a classic condition called deadlock(We have a process that's waiting for an event that never will happen). </p>
+
+<hr>
+
+<p>To deal with this, I create a I/O library to <b>safely generating formatted output</b>.</p>
+
+<p>Use the <b>reentrant SIO</b> in your handlers, then every function is async-signal-safe.</p>
+
+```
+ssize_t sio_puts(char s[])  /* Put string */
+{
+    return write(STDOUT_FILENO, s, sio_strlen(s));
+}
+ssize_t sio_putl(long v)    /* Put long */
+{
+    char s[128];
+    sio_ltoa(v, s, 10);
+    return sio_puts(s);
+}
+void sio_error(char s[])    /* Put msg & exit */
+{
+    sio_puts(s);
+    _exit(1);
+}
+```
+
+<hr>
+
+</br>
+
+### Correct Signal Handling
+
+</br>
+
+<p><b>Pending signals are not queued</b>. For each signal type, one bit indicates whether or not signal is pending. Thus at most one pending signal of any particular type.</p>
+
+<p><b>You can't use signals to count events</b>, such as children terminating.</p>
+
+```
+// This code is buggy
+
+void handler1(int sig)
+{
+    int olderrno = errno;
+
+    if((waitpid(-1, NULL, 0)) < 0)
+        sio_error("waitpid error");
+    sio_puts("Handler reaped child\n")
+    sleep(1);
+    errno = olderrno;
+}
+
+int main()
+{
+    int i, n;
+    char buf[MAXBUF];
+
+    if(signal(SIGCHLD, handler) == SIG_ERR)
+        unix_error("signal error);
+
+    for(i = 0; i < 3; i ++)
+    {
+        if(Fork() == 0)
+        {
+            printf("Hello from child\n");
+            exit(0);
+        }
+    }
+
+    if((n = read(STDIN_FILENO, buf, sizeof(buf))) < 0)
+        uxin_error("read error");
+
+    printf("Parent processing input\n");
+    while(1)
+        ;
+    exit(0);
+}
+```
+
+<p>Our program creates three process, but it might just reap two process， which led to a child process being not reaped and it becomes a zombie process(defunct).</p>
+
+```
+void handler2(int sig)
+{
+    int olderrno = errno;
+
+    while(waitpid(-1, NULL, 0) > 0)
+        sio_puts("child reaped");
+
+    if(errno != ECHLD)
+        sio_errno("waitpid error");
+
+    sleep(1);
+    errno = olderrno
+}
+```
+
+<p>We execute this loop until there's no more terminated children (waitpid returns -1).</p>
+
+
+
+
 
 </br>
 
